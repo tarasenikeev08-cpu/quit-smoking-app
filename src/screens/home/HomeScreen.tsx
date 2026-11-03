@@ -9,6 +9,7 @@ import {Stat} from '@/components/ui';
 import {colors, spacing} from '@/theme';
 import {useStore} from '@/store';
 import {useStreakDays, useRank, useSavings} from '@/store/selectors';
+import {haptic} from '@/lib/platform';
 
 export default function HomeScreen() {
   const streak = useStreakDays();
@@ -43,7 +44,10 @@ export default function HomeScreen() {
         </View>
 
         <Pressable
-          onPress={() => setHeldToday(true)}
+          onPress={() => {
+            haptic('success');
+            setHeldToday(true);
+          }}
           style={[styles.hold, heldToday && styles.holdDone]}>
           <Text style={[styles.holdTxt, heldToday && {color: colors.paper}]}>
             {heldToday ? 'Held today' : 'Hold — still clean'}

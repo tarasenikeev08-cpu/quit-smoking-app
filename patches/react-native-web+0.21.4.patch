@@ -1,0 +1,32 @@
+diff --git a/node_modules/react-native-web/dist/cjs/index.js b/node_modules/react-native-web/dist/cjs/index.js
+index b5bdcc5..378be07 100644
+--- a/node_modules/react-native-web/dist/cjs/index.js
++++ b/node_modules/react-native-web/dist/cjs/index.js
+@@ -127,5 +127,10 @@ var _useColorScheme = _interopRequireDefault(require("./exports/useColorScheme")
+ exports.useColorScheme = _useColorScheme.default;
+ var _useLocaleContext = _interopRequireDefault(require("./exports/useLocaleContext"));
+ exports.useLocaleContext = _useLocaleContext.default;
++// quit-smoking-app web shims (see ESM index.js)
++exports.TurboModuleRegistry = { get: function () { return null; }, getEnforcing: function () { return null; } };
++exports.codegenNativeComponent = function () { return function () { return null; }; };
++exports.codegenNativeCommands = function () { return {}; };
++exports.requireNativeComponent = function () { return function () { return null; }; };
+ var _useWindowDimensions = _interopRequireDefault(require("./exports/useWindowDimensions"));
+ exports.useWindowDimensions = _useWindowDimensions.default;
+\ No newline at end of file
+diff --git a/node_modules/react-native-web/dist/index.js b/node_modules/react-native-web/dist/index.js
+index f35466c..5023d89 100644
+--- a/node_modules/react-native-web/dist/index.js
++++ b/node_modules/react-native-web/dist/index.js
+@@ -68,4 +68,10 @@ export { default as DeviceEventEmitter } from './exports/DeviceEventEmitter';
+ // hooks
+ export { default as useColorScheme } from './exports/useColorScheme';
+ export { default as useLocaleContext } from './exports/useLocaleContext';
++// quit-smoking-app web shims: native-only APIs some RN libs import at module
++// top-level (Fabric/TurboModules). No-ops; never executed on web.
++export var TurboModuleRegistry = { get: function () { return null; }, getEnforcing: function () { return null; } };
++export var codegenNativeComponent = function () { return function () { return null; }; };
++export var codegenNativeCommands = function () { return {}; };
++export var requireNativeComponent = function () { return function () { return null; }; };
+ export { default as useWindowDimensions } from './exports/useWindowDimensions';
+\ No newline at end of file

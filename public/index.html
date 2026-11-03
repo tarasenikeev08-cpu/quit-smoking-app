@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>Ember</title>
+    <style>
+      html, body { height: 100%; margin: 0; }
+      body { background: #C9C7BE; }
+      /* centre the app in a phone-width column on desktop */
+      #root {
+        width: 100%;
+        max-width: 430px;
+        height: 100dvh;
+        margin: 0 auto;
+        background: #F4F3EF;
+        overflow: hidden;
+        box-shadow: 0 0 40px rgba(0,0,0,0.12);
+        display: flex;
+        flex-direction: column;
+      }
+      #root > div { flex: 1; display: flex; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

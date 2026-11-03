@@ -7,11 +7,28 @@ accent, ink line-art companions — per `Ember_Design_Reference.html`.
 > **Backend (Supabase) and payments (RevenueCat/provider TBD) are STUBBED** —
 > see [Stubs](#stubs). No network calls, no accounts, no real billing yet.
 
-## Run it (macOS)
+## Run it in a browser (quickest — no native build)
 
 ```bash
 npm install
 ```
+
+```bash
+npm run web
+```
+
+Then open **http://localhost:5173** in Chrome. This runs the exact same screens,
+navigation, and logic via **react-native-web** (webpack dev server, hot reload).
+Everything is usable: onboard, build a streak, check in, earn ranks, unlock and
+equip companions, run the slip/restore flow. Native-only bits (home-screen
+widget, haptics) are no-ops on web — see `src/lib/platform.ts`.
+
+> Web plumbing: `webpack.config.js`, `index.web.js`, `public/index.html`. The
+> `react-native` → `react-native-web` mapping needs two native-only exports that
+> RNW doesn't ship; those are added via `patches/react-native-web+*.patch`
+> (applied automatically on `npm install` by `patch-package`).
+
+## Run it on device (macOS)
 
 ```bash
 cp .env.example .env    # optional; only needed once the backend/payments are wired
@@ -30,9 +47,7 @@ Android (needs Android Studio + a running emulator or device):
 npm run android
 ```
 
-Metro starts automatically; `npm start` runs it on its own. The app is fully
-usable offline today — onboard, build a streak, check in, earn ranks, unlock
-and equip companions, and run the slip/restore flow.
+The app is fully usable offline today.
 
 ```bash
 npm run typecheck   # tsc --noEmit (passes)

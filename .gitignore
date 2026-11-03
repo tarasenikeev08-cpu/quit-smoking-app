@@ -77,3 +77,6 @@ yarn-error.log
 # Environment variables
 .env
 .env.local
+
+# web build output
+dist-web/

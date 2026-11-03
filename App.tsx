@@ -7,17 +7,17 @@
  * SDK initialisation happen here yet.
  */
 import React from 'react';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 
+import GestureRoot from '@/components/GestureRoot';
 import RootNavigator from '@/navigation/RootNavigator';
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
+    <GestureRoot>
       <SafeAreaProvider>
         <RootNavigator />
       </SafeAreaProvider>
-    </GestureHandlerRootView>
+    </GestureRoot>
   );
 }
