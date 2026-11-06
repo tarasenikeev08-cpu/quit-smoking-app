@@ -5,7 +5,7 @@ import {useNavigation} from '@react-navigation/native';
 import Screen from '@/components/Screen';
 import Icon from '@/components/Icon';
 import Flame from '@/components/Flame';
-import {colors, spacing} from '@/theme';
+import {colors, gutter, radius, spacing, type as T} from '@/theme';
 import {useRank, useStreakDays, useLifetimeDays, useSavings} from '@/store/selectors';
 import {RANKS} from '@/lib/ranks';
 
@@ -109,74 +109,75 @@ export default function RankScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: {paddingHorizontal: spacing.lg, paddingTop: 10},
+  content: {paddingHorizontal: gutter, paddingTop: spacing.sm},
   header: {alignItems: 'center'},
-  kicker: {fontSize: 10, color: colors.muted, letterSpacing: 2, textTransform: 'uppercase'},
-  rankName: {fontSize: 24, fontWeight: '500', letterSpacing: 1, marginTop: 4, color: colors.ink},
+  kicker: {...T.label, color: colors.muted},
+  rankName: {...T.h1, color: colors.ink, marginTop: spacing.xs},
 
   savedCard: {
-    marginTop: 14,
+    marginTop: spacing.lg,
     borderWidth: 1.5,
     borderColor: colors.ink,
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: radius.card,
+    padding: spacing.lg,
     alignItems: 'center',
     backgroundColor: colors.card,
   },
-  savedK: {fontSize: 10, color: colors.muted, letterSpacing: 1.5, textTransform: 'uppercase'},
-  savedV: {fontSize: 32, fontWeight: '500', marginTop: 2, color: colors.ink},
-  savedSub: {fontSize: 10, color: colors.muted, marginTop: 2},
+  savedK: {...T.label, color: colors.muted},
+  savedV: {fontSize: 40, fontWeight: '500', marginTop: spacing.xs, color: colors.ink},
+  savedSub: {...T.caption, color: colors.muted, marginTop: spacing.xs},
 
-  miniRow: {flexDirection: 'row', gap: 10, marginTop: 10},
+  miniRow: {flexDirection: 'row', gap: spacing.md, marginTop: spacing.md},
   mini: {
     flex: 1,
+    height: 64,
     borderWidth: 1.5,
     borderColor: colors.border,
-    borderRadius: 12,
-    paddingVertical: 9,
+    borderRadius: radius.stat,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  miniVRow: {flexDirection: 'row', alignItems: 'center', gap: 3},
-  miniV: {fontSize: 17, fontWeight: '500', color: colors.ink},
-  miniK: {fontSize: 9, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5},
+  miniVRow: {flexDirection: 'row', alignItems: 'center', gap: spacing.xs},
+  miniV: {...T.statValue, color: colors.ink},
+  miniK: {...T.label, color: colors.muted, marginTop: 2},
 
-  progressWrap: {marginTop: 16},
-  progressLabels: {flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6},
-  progressLabel: {fontSize: 10, color: colors.muted},
+  progressWrap: {marginTop: spacing.xl},
+  progressLabels: {flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.sm},
+  progressLabel: {...T.caption, color: colors.muted},
   track: {height: 8, backgroundColor: colors.border, borderRadius: 10, overflow: 'hidden'},
   fill: {height: '100%', backgroundColor: colors.ink},
 
-  ladder: {marginTop: 16},
+  ladder: {marginTop: spacing.xl},
   tier: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    gap: spacing.md,
+    height: 48,
+    paddingHorizontal: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.hair,
   },
   tierDone: {opacity: 0.5},
   tierCurrent: {
     backgroundColor: colors.ink,
-    borderRadius: 12,
+    borderRadius: radius.stat,
     borderBottomWidth: 0,
     marginVertical: 2,
   },
-  tierName: {flex: 1, fontSize: 13, color: colors.ink},
-  tierDays: {fontSize: 11, color: colors.muted},
+  tierName: {flex: 1, fontSize: 16, color: colors.ink},
+  tierDays: {...T.caption, color: colors.muted},
 
   note: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 14,
-    padding: 12,
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+    padding: spacing.md,
     backgroundColor: colors.softer,
-    borderRadius: 12,
+    borderRadius: radius.stat,
   },
-  noteTxt: {flex: 1, fontSize: 10, color: '#6A6A64', lineHeight: 15},
+  noteTxt: {flex: 1, ...T.caption, color: '#6A6A64', lineHeight: 17},
 
-  slipLink: {alignItems: 'center', marginTop: 18},
-  slipLinkTxt: {fontSize: 12, color: colors.muted, textDecorationLine: 'underline'},
+  slipLink: {alignItems: 'center', marginTop: spacing.xxl},
+  slipLinkTxt: {...T.caption, color: colors.muted, textDecorationLine: 'underline'},
 });

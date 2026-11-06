@@ -8,7 +8,7 @@ import {
   ViewStyle,
   StyleProp,
 } from 'react-native';
-import {colors, radius, type as T} from '@/theme';
+import {colors, controls, radius, cardPadding, type as T} from '@/theme';
 
 /* ---------------------------------- Text ---------------------------------- */
 
@@ -18,37 +18,52 @@ type TxtProps = {
   numberOfLines?: number;
 };
 
+/** Label token — 11 / 500 / +2 / UPPERCASE. */
 export const Label = ({children, style}: TxtProps) => (
-  <Text style={[T.label, style]}>{children}</Text>
+  <Text style={[T.label, {color: colors.muted}, style]}>{children}</Text>
 );
 
-export const Muted = ({children, style, numberOfLines}: TxtProps) => (
-  <Text numberOfLines={numberOfLines} style={[{color: colors.muted, fontSize: 11}, style]}>
+/** Caption token — 12 / 400. */
+export const Caption = ({children, style, numberOfLines}: TxtProps) => (
+  <Text numberOfLines={numberOfLines} style={[T.caption, {color: colors.muted}, style]}>
     {children}
   </Text>
 );
+
+/** Body token — 16 / 400. */
+export const Body = ({children, style, numberOfLines}: TxtProps) => (
+  <Text numberOfLines={numberOfLines} style={[T.body, {color: colors.ink}, style]}>
+    {children}
+  </Text>
+);
+
+export const Muted = Caption;
 
 /* --------------------------------- Button --------------------------------- */
 
 type ButtonProps = {
   label: string;
   onPress?: () => void;
-  variant?: 'primary' | 'outline' | 'light' | 'soft';
+  /** primary = solid ink 52/26 · outline = 50/25 · light = solid paper (on ink) */
+  variant?: 'primary' | 'outline' | 'light';
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
 export function Button({label, onPress, variant = 'primary', disabled, style}: ButtonProps) {
+  const dims =
+    variant === 'outline' ? controls.outline : controls.primary;
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      accessibilityRole="button"
       style={({pressed}) => [
         styles.btnBase,
+        {height: dims.height, borderRadius: dims.radius},
         variant === 'primary' && styles.btnPrimary,
         variant === 'outline' && styles.btnOutline,
         variant === 'light' && styles.btnLight,
-        variant === 'soft' && styles.btnSoft,
         pressed && styles.pressed,
         disabled && styles.disabled,
         style,
@@ -57,9 +72,8 @@ export function Button({label, onPress, variant = 'primary', disabled, style}: B
         style={[
           T.button,
           variant === 'primary' && {color: colors.onInk},
-          variant === 'light' && {color: colors.ink},
           variant === 'outline' && {color: colors.ink},
-          variant === 'soft' && {color: colors.ink},
+          variant === 'light' && {color: colors.ink},
         ]}>
         {label}
       </Text>
@@ -71,7 +85,8 @@ export function Button({label, onPress, variant = 'primary', disabled, style}: B
 
 type CardProps = {
   children: React.ReactNode;
-  strong?: boolean; // ink border vs hairline
+  /** ink border instead of the light hairline */
+  strong?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -90,6 +105,7 @@ export function Card({children, strong, style}: CardProps) {
 
 /* --------------------------------- Stat box -------------------------------- */
 
+/** Spec: height 64, radius 12, border 1.5, label 11 muted + value 24. */
 export function Stat({
   k,
   v,
@@ -108,7 +124,7 @@ export function Stat({
         {borderColor: strong ? colors.borderStrong : colors.border},
         style,
       ]}>
-      <Text style={styles.statK}>{k}</Text>
+      <Text style={[T.label, {color: colors.muted}]}>{k}</Text>
       <View style={styles.statVRow}>
         {typeof v === 'string' || typeof v === 'number' ? (
           <Text style={styles.statV}>{v}</Text>
@@ -120,8 +136,9 @@ export function Stat({
   );
 }
 
-/* ---------------------------------- Pill ---------------------------------- */
+/* ---------------------------------- Chip ---------------------------------- */
 
+/** Spec: height 32, radius 20, 11pt, selected ink/paper · unselected border/muted. */
 export function Pill({
   label,
   active,
@@ -136,13 +153,14 @@ export function Pill({
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.pill, active ? styles.pillActive : styles.pillIdle]}>
+      accessibilityRole="button"
+      style={[styles.chip, active ? styles.chipActive : styles.chipIdle]}>
       {icon}
       <Text
         style={[
-          styles.pillText,
+          styles.chipText,
           {color: active ? colors.onInk : colors.muted},
-          icon ? {marginLeft: 5} : null,
+          icon ? {marginLeft: 6} : null,
         ]}>
         {label}
       </Text>
@@ -158,54 +176,45 @@ export const Hair = ({style}: {style?: StyleProp<ViewStyle>}) => (
 
 const styles = StyleSheet.create({
   btnBase: {
-    borderRadius: radius.pill,
-    paddingVertical: 13,
-    paddingHorizontal: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 20,
   },
   btnPrimary: {backgroundColor: colors.ink},
-  btnOutline: {borderWidth: 1.5, borderColor: colors.ink},
+  btnOutline: {borderWidth: 1.5, borderColor: colors.ink, backgroundColor: 'transparent'},
   btnLight: {backgroundColor: colors.paper},
-  btnSoft: {backgroundColor: colors.pill, borderWidth: 1.5, borderColor: colors.ink},
   pressed: {opacity: 0.8},
   disabled: {opacity: 0.4},
 
   card: {
     backgroundColor: colors.card,
     borderWidth: 1.5,
-    borderRadius: radius.sm,
-    padding: 14,
+    borderRadius: radius.card,
+    padding: cardPadding,
   },
 
   stat: {
     flex: 1,
+    height: 64,
     borderWidth: 1.5,
-    borderRadius: 12,
-    paddingVertical: 11,
-    paddingHorizontal: 14,
+    borderRadius: radius.stat,
+    paddingHorizontal: 12,
+    justifyContent: 'center',
     backgroundColor: colors.card,
   },
-  statK: {
-    fontSize: 10,
-    color: colors.muted,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-  },
   statVRow: {flexDirection: 'row', alignItems: 'center', marginTop: 2},
-  statV: {fontSize: 18, color: colors.ink, fontWeight: '500'},
+  statV: {...T.statValue, color: colors.ink},
 
-  pill: {
+  chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    height: controls.chip.height,
+    borderRadius: controls.chip.radius,
+    paddingHorizontal: 14,
   },
-  pillActive: {backgroundColor: colors.ink, borderColor: colors.ink},
-  pillIdle: {backgroundColor: 'transparent', borderColor: colors.border},
-  pillText: {fontSize: 11},
+  chipActive: {backgroundColor: colors.ink},
+  chipIdle: {backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.border},
+  chipText: {fontSize: 11, fontWeight: '500'},
 
   hair: {height: 1, backgroundColor: colors.hair},
 });

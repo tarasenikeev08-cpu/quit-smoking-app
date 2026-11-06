@@ -4,7 +4,7 @@ import {View, Text, StyleSheet, Pressable} from 'react-native';
 import Screen from '@/components/Screen';
 import Companion from '@/components/Companion';
 import Icon from '@/components/Icon';
-import {colors, spacing} from '@/theme';
+import {colors, gutter, radius, spacing, type as T} from '@/theme';
 import {useStore} from '@/store';
 import {useUnlocked, useRank} from '@/store/selectors';
 import {COMPANIONS} from '@/lib/companions';
@@ -80,54 +80,60 @@ export default function CollectionScreen() {
   );
 }
 
-const COL_GAP = 10;
+const COL_GAP = 12;
 
 const styles = StyleSheet.create({
-  content: {paddingHorizontal: spacing.lg, paddingTop: 10},
+  content: {paddingHorizontal: gutter, paddingTop: spacing.sm},
   header: {alignItems: 'center'},
-  kicker: {fontSize: 10, color: colors.muted, letterSpacing: 2, textTransform: 'uppercase'},
-  count: {fontSize: 20, fontWeight: '500', marginTop: 3, color: colors.ink},
+  kicker: {...T.label, color: colors.muted},
+  count: {...T.h2, color: colors.ink, marginTop: spacing.xs},
 
   equipCard: {
-    marginTop: 14,
+    marginTop: spacing.lg,
     borderWidth: 1.5,
     borderColor: colors.ink,
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: radius.card,
+    padding: spacing.lg,
     backgroundColor: colors.card,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: spacing.lg,
   },
   equipInfo: {flex: 1},
-  equipName: {fontSize: 14, fontWeight: '500', color: colors.ink},
-  equipSub: {fontSize: 10, color: colors.muted},
+  equipName: {...T.body, fontWeight: '500', color: colors.ink},
+  equipSub: {...T.caption, color: colors.muted},
 
   grid: {
-    marginTop: 16,
+    marginTop: spacing.lg,
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: COL_GAP,
   },
   cell: {
-    width: `${(100 - 0) / 3}%`,
     flexBasis: '30%',
     flexGrow: 1,
     borderWidth: 1.5,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 6,
+    borderRadius: radius.cardSm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
     alignItems: 'center',
-    minHeight: 78,
+    minHeight: 88,
     justifyContent: 'center',
   },
   cellUnlocked: {borderColor: colors.ink, backgroundColor: colors.card},
   cellEquipped: {borderColor: colors.ink, backgroundColor: colors.soft},
   cellNext: {borderColor: colors.ink, borderStyle: 'dashed'},
   cellLocked: {borderColor: colors.hair},
-  cellName: {fontSize: 9, marginTop: 4, color: colors.ink},
-  cellNextTxt: {fontSize: 8, marginTop: 4, fontWeight: '500', color: colors.ink, textAlign: 'center'},
-  cellLockedTxt: {fontSize: 8, marginTop: 6, color: colors.frame},
+  cellName: {...T.caption, fontSize: 11, marginTop: spacing.xs, color: colors.ink},
+  cellNextTxt: {
+    ...T.caption,
+    fontSize: 11,
+    marginTop: spacing.xs,
+    fontWeight: '500',
+    color: colors.ink,
+    textAlign: 'center',
+  },
+  cellLockedTxt: {...T.caption, fontSize: 11, marginTop: spacing.sm, color: colors.frame},
 
-  footnote: {fontSize: 10, color: colors.muted, textAlign: 'center', marginTop: 18},
+  footnote: {...T.caption, color: colors.muted, textAlign: 'center', marginTop: spacing.xxl},
 });

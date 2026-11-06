@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {Animated, Easing, LayoutChangeEvent, Pressable, StyleSheet, Text, View} from 'react-native';
-import {colors, radius} from '@/theme';
+import {colors, controls, type as T} from '@/theme';
 
 export const HOLD_DURATION = 1200;
 
@@ -108,8 +108,8 @@ export default function HoldButton({
 
 const styles = StyleSheet.create({
   track: {
-    height: 56,
-    borderRadius: radius.pill,
+    height: controls.hold.height,
+    borderRadius: controls.hold.radius,
     backgroundColor: colors.pill,
     borderWidth: 1.5,
     borderColor: colors.ink,
@@ -133,10 +133,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   clip: {left: 0, right: undefined, overflow: 'hidden'},
-  label: {
-    fontSize: 13,
-    fontWeight: '500',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
+  label: {...T.button},
 });

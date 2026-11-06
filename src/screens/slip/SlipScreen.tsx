@@ -6,7 +6,7 @@ import Screen from '@/components/Screen';
 import Flame from '@/components/Flame';
 import Icon from '@/components/Icon';
 import {Button} from '@/components/ui';
-import {colors, spacing} from '@/theme';
+import {colors, controls, gutter, radius, spacing, type as T} from '@/theme';
 import {useStore} from '@/store';
 import {useStreakDays, useSavings} from '@/store/selectors';
 
@@ -80,28 +80,28 @@ export default function SlipScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrap: {flex: 1, paddingHorizontal: spacing.lg, paddingTop: 8},
-  title: {textAlign: 'center', fontSize: 18, fontWeight: '500', lineHeight: 23, color: colors.ink},
-  flame: {alignItems: 'center', paddingTop: 12, paddingBottom: 2},
-  atRisk: {textAlign: 'center', fontSize: 11, color: colors.muted},
-  chips: {flexDirection: 'row', justifyContent: 'center', gap: 7, marginTop: 14},
+  wrap: {flex: 1, paddingHorizontal: gutter, paddingTop: spacing.sm, paddingBottom: spacing.lg},
+  title: {...T.h2, textAlign: 'center', lineHeight: 28, color: colors.ink},
+  flame: {alignItems: 'center', paddingTop: spacing.lg, paddingBottom: spacing.xs},
+  atRisk: {...T.caption, textAlign: 'center', color: colors.muted},
+  chips: {flexDirection: 'row', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.lg},
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: spacing.sm,
+    height: controls.chip.height,
     borderWidth: 1.5,
     borderColor: colors.border,
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    borderRadius: controls.chip.radius,
+    paddingHorizontal: 14,
   },
-  chipTxt: {fontSize: 10, color: colors.ink},
+  chipTxt: {fontSize: 11, fontWeight: '500', color: colors.ink},
   restoreCard: {
-    marginTop: 14,
+    marginTop: spacing.lg,
     borderWidth: 1.5,
     borderColor: colors.ink,
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: radius.card,
+    padding: spacing.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -109,12 +109,18 @@ const styles = StyleSheet.create({
   },
   restoreDisabled: {opacity: 0.45},
   restoreInfo: {flex: 1},
-  restoreTitle: {fontSize: 13, fontWeight: '500', color: colors.ink},
-  restoreSub: {fontSize: 10, color: colors.muted, marginTop: 2},
-  restoreTag: {borderWidth: 1.5, borderColor: colors.ink, borderRadius: 20, paddingHorizontal: 9, paddingVertical: 4},
-  restoreTagTxt: {fontSize: 11, color: colors.ink},
-  spacer: {flex: 1, minHeight: 20},
-  cta: {marginBottom: 9},
-  startOver: {alignItems: 'center', paddingBottom: 4},
-  startOverTxt: {fontSize: 11, color: colors.muted},
+  restoreTitle: {...T.body, fontWeight: '500', color: colors.ink},
+  restoreSub: {...T.caption, color: colors.muted, marginTop: spacing.xs},
+  restoreTag: {
+    borderWidth: 1.5,
+    borderColor: colors.ink,
+    borderRadius: controls.chip.radius,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  restoreTagTxt: {...T.caption, color: colors.ink},
+  spacer: {flex: 1, minHeight: spacing.xl},
+  cta: {marginBottom: spacing.md},
+  startOver: {alignItems: 'center', paddingBottom: spacing.xs},
+  startOverTxt: {...T.caption, color: colors.muted},
 });

@@ -18,7 +18,7 @@ export type IconName =
 type Props = {name: IconName; size?: number; color?: string; filled?: boolean};
 
 /** Minimal ink-line icon set (Tabler-style) drawn in a 24 viewBox. */
-export default function Icon({name, size = 22, color = colors.ink}: Props) {
+export default function Icon({name, size = 24, color = colors.ink}: Props) {
   const p = {stroke: color, strokeWidth: 1.8, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const};
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">

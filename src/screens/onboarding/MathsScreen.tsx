@@ -5,7 +5,7 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 import Screen from '@/components/Screen';
 import {Button} from '@/components/ui';
-import {colors, spacing} from '@/theme';
+import {colors, gutter, radius, spacing, type as T} from '@/theme';
 import {useStore} from '@/store';
 import {DEFAULT_HABIT} from '@/lib/savings';
 import type {OnboardingParamList} from '@/navigation/types';
@@ -71,8 +71,8 @@ export default function MathsScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrap: {flex: 1, paddingHorizontal: spacing.lg, paddingTop: 18, paddingBottom: spacing.xl},
-  headline: {fontSize: 16, fontWeight: '500', lineHeight: 21, color: colors.ink, marginBottom: 18},
+  wrap: {flex: 1, paddingHorizontal: gutter, paddingTop: spacing.xl, paddingBottom: spacing.xxl},
+  headline: {...T.h2, lineHeight: 30, color: colors.ink, marginBottom: spacing.xxl},
   underline: {borderBottomWidth: 2, borderColor: colors.ink},
   stepper: {
     flexDirection: 'row',
@@ -81,42 +81,41 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1.5,
     borderColor: colors.border,
-    borderRadius: 14,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    marginBottom: 20,
+    borderRadius: radius.cardSm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.xxl,
   },
   stepBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepTxt: {fontSize: 22, color: colors.ink, lineHeight: 24},
-  stepVal: {fontSize: 16, fontWeight: '500', color: colors.ink},
-  cap: {
-    fontSize: 10,
-    color: colors.muted,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 6,
-  },
+  stepTxt: {fontSize: 24, color: colors.ink, lineHeight: 26},
+  stepVal: {...T.body, fontWeight: '500', color: colors.ink},
+  cap: {...T.label, color: colors.muted, marginBottom: spacing.sm},
   barDark: {
-    height: 30,
+    height: 36,
     backgroundColor: colors.ink,
-    borderRadius: 6,
+    borderRadius: 8,
     alignItems: 'flex-end',
     justifyContent: 'center',
-    paddingRight: 10,
-    marginBottom: 16,
+    paddingRight: spacing.md,
+    marginBottom: spacing.xl,
   },
-  barDarkTxt: {color: colors.paper, fontSize: 13, fontWeight: '500'},
-  row: {flexDirection: 'row', alignItems: 'center', gap: 8},
-  barAccent: {height: 30, backgroundColor: colors.accent, borderRadius: 6, minWidth: 12},
-  barAccentTxt: {fontSize: 13, fontWeight: '500', color: colors.ink},
-  footnote: {textAlign: 'center', fontSize: 12, marginTop: 20, lineHeight: 17, color: colors.ink},
+  barDarkTxt: {color: colors.paper, ...T.body, fontWeight: '500'},
+  row: {flexDirection: 'row', alignItems: 'center', gap: spacing.md},
+  barAccent: {height: 36, backgroundColor: colors.accent, borderRadius: 8, minWidth: 14},
+  barAccentTxt: {...T.body, fontWeight: '500', color: colors.ink},
+  footnote: {
+    ...T.body,
+    textAlign: 'center',
+    marginTop: spacing.xxl,
+    color: colors.ink,
+  },
   bold: {fontWeight: '700'},
   spacer: {flex: 1},
 });

@@ -4,7 +4,7 @@ import {useNavigation} from '@react-navigation/native';
 
 import Screen from '@/components/Screen';
 import {Button, Pill} from '@/components/ui';
-import {colors, spacing} from '@/theme';
+import {colors, gutter, spacing, type as T} from '@/theme';
 import {useStore} from '@/store';
 import {TRIGGERS, Trigger} from '@/lib/journal';
 
@@ -72,34 +72,32 @@ export default function CheckInScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: {paddingHorizontal: spacing.lg, paddingTop: 8, flexGrow: 1},
+  content: {paddingHorizontal: gutter, paddingTop: spacing.sm, flexGrow: 1},
   headerRow: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'},
-  title: {fontSize: 16, fontWeight: '500', color: colors.ink},
-  skip: {fontSize: 12, color: colors.muted},
-  hint: {fontSize: 10, color: colors.muted, marginTop: 2},
+  title: {...T.h2, color: colors.ink},
+  skip: {...T.body, color: colors.muted},
+  hint: {...T.caption, color: colors.muted, marginTop: spacing.xs},
 
   sectionLabel: {
-    fontSize: 10,
+    ...T.label,
     color: colors.muted,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginTop: 22,
-    marginBottom: 8,
+    marginTop: spacing.xxl,
+    marginBottom: spacing.md,
   },
 
-  cravingRow: {flexDirection: 'row', alignItems: 'center', gap: 6},
-  cravingHit: {flex: 1, paddingVertical: 8},
+  cravingRow: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm},
+  cravingHit: {flex: 1, paddingVertical: spacing.sm},
   cravingBar: {height: 8, borderRadius: 10},
   cravingOn: {backgroundColor: colors.ink},
   cravingOff: {backgroundColor: colors.border},
-  cravingNum: {fontSize: 13, fontWeight: '500', marginLeft: 4, color: colors.ink},
+  cravingNum: {...T.body, fontWeight: '500', marginLeft: spacing.sm, color: colors.ink},
 
-  pills: {flexDirection: 'row', flexWrap: 'wrap', gap: 7},
+  pills: {flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm},
 
-  moodRow: {flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4},
-  moodDot: {fontSize: 20},
+  moodRow: {flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.xs},
+  moodDot: {fontSize: 24},
   moodActive: {color: colors.ink},
   moodIdle: {color: colors.ink, opacity: 0.3},
 
-  spacer: {flex: 1, minHeight: 20},
+  spacer: {flex: 1, minHeight: spacing.xl},
 });

@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 
 import Screen from '@/components/Screen';
 import {Button, Card, Hair} from '@/components/ui';
-import {colors, spacing} from '@/theme';
+import {colors, gutter, spacing, type as T} from '@/theme';
 import {useStore} from '@/store';
 import {useInsights} from '@/store/selectors';
 
@@ -105,33 +105,20 @@ export default function PatternsScreen() {
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const styles = StyleSheet.create({
-  content: {paddingHorizontal: spacing.lg, paddingTop: 10},
-  kicker: {
-    textAlign: 'center',
-    fontSize: 10,
-    color: colors.muted,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: 14,
-  },
-  highlight: {marginBottom: 12},
-  highlightTxt: {fontSize: 12, lineHeight: 17, color: colors.ink},
-  sectionLabel: {
-    fontSize: 10,
-    color: colors.muted,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 10,
-  },
-  xLabels: {flexDirection: 'row', justifyContent: 'space-between', marginTop: 2},
-  xLabel: {fontSize: 8, color: colors.frame},
-  secondary: {marginTop: 14, borderColor: colors.border},
-  secondaryTxt: {fontSize: 11, lineHeight: 16, color: colors.ink},
-  grow: {flex: 1, minHeight: 16},
-  logBtn: {marginTop: 16},
-  log: {marginTop: 14},
-  logRow: {paddingVertical: 10},
-  logDate: {fontSize: 12, fontWeight: '500', color: colors.ink},
-  logMeta: {fontSize: 11, color: colors.muted, marginTop: 2},
-  empty: {fontSize: 12, color: colors.muted, textAlign: 'center', paddingVertical: 12},
+  content: {paddingHorizontal: gutter, paddingTop: spacing.sm},
+  kicker: {...T.label, textAlign: 'center', color: colors.muted, marginBottom: spacing.lg},
+  highlight: {marginBottom: spacing.md},
+  highlightTxt: {...T.body, color: colors.ink},
+  sectionLabel: {...T.label, color: colors.muted, marginBottom: spacing.md},
+  xLabels: {flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.xs},
+  xLabel: {...T.caption, fontSize: 11, color: colors.frame},
+  secondary: {marginTop: spacing.lg, borderColor: colors.border},
+  secondaryTxt: {...T.body, fontSize: 15, lineHeight: 21, color: colors.ink},
+  grow: {flex: 1, minHeight: spacing.lg},
+  logBtn: {marginTop: spacing.xl},
+  log: {marginTop: spacing.lg},
+  logRow: {paddingVertical: spacing.md},
+  logDate: {...T.body, fontSize: 15, fontWeight: '500', color: colors.ink},
+  logMeta: {...T.caption, color: colors.muted, marginTop: spacing.xs},
+  empty: {...T.caption, color: colors.muted, textAlign: 'center', paddingVertical: spacing.md},
 });

@@ -6,7 +6,7 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import Screen from '@/components/Screen';
 import Flame from '@/components/Flame';
 import {Button, Muted} from '@/components/ui';
-import {colors, spacing} from '@/theme';
+import {colors, gutter, spacing, type as T} from '@/theme';
 import type {OnboardingParamList} from '@/navigation/types';
 
 export default function HookScreen() {
@@ -27,15 +27,15 @@ export default function HookScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrap: {flex: 1, paddingHorizontal: spacing.lg, paddingBottom: spacing.xl},
-  hero: {alignItems: 'center', paddingTop: 48, paddingBottom: 18},
-  title: {
+  wrap: {flex: 1, paddingHorizontal: gutter, paddingBottom: spacing.xxl},
+  hero: {alignItems: 'center', paddingTop: spacing.huge, paddingBottom: spacing.xxl},
+  title: {...T.h1, textAlign: 'center', lineHeight: 40, color: colors.ink},
+  sub: {
+    ...T.body,
     textAlign: 'center',
-    fontSize: 23,
-    fontWeight: '500',
-    lineHeight: 27,
-    color: colors.ink,
+    color: colors.muted,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.xxl,
   },
-  sub: {textAlign: 'center', marginTop: 10, lineHeight: 16, paddingHorizontal: 24},
   spacer: {flex: 1},
 });
