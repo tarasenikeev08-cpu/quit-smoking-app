@@ -73,6 +73,7 @@ export default function PatternsScreen() {
         </Text>
       </Card>
 
+      <View style={styles.grow} />
       <Button
         label={showLog ? 'Hide log' : 'See full log'}
         variant="outline"
@@ -126,6 +127,7 @@ const styles = StyleSheet.create({
   xLabel: {fontSize: 8, color: colors.frame},
   secondary: {marginTop: 14, borderColor: colors.border},
   secondaryTxt: {fontSize: 11, lineHeight: 16, color: colors.ink},
+  grow: {flex: 1, minHeight: 16},
   logBtn: {marginTop: 16},
   log: {marginTop: 14},
   logRow: {paddingVertical: 10},

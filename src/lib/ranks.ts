@@ -10,18 +10,21 @@ export type Rank = {
 };
 
 /**
- * Nine ranks, nine companions. Rank is earned on LIFETIME clean days, so a
- * slip breaks your streak but never your rank, savings, or unlocked companions.
+ * The rank ladder. Rank is earned on LIFETIME clean days, so a slip breaks your
+ * streak but never your rank, savings, or unlocked companions.
+ *
+ * Thresholds match design/reference.html (Steel 14d, Silver 30d, Graphite 60d).
+ * One companion unlocks per tier.
  */
 export const RANKS: Rank[] = [
-  {key: 'spark', name: 'Spark', threshold: 0, companion: 'puff'},
-  {key: 'steel', name: 'Steel', threshold: 14, companion: 'sprout'},
-  {key: 'silver', name: 'Silver', threshold: 30, companion: 'pebble'},
+  {key: 'ash', name: 'Ash', threshold: 0, companion: 'puff'},
+  {key: 'ember', name: 'Ember', threshold: 3, companion: 'sprout'},
+  {key: 'iron', name: 'Iron', threshold: 7, companion: 'mecha'},
+  {key: 'steel', name: 'Steel', threshold: 14, companion: 'pebble'},
+  {key: 'silver', name: 'Silver', threshold: 30, companion: 'luna'},
   {key: 'graphite', name: 'Graphite', threshold: 60, companion: 'slime'},
-  {key: 'obsidian', name: 'Obsidian', threshold: 90, companion: 'luna'},
-  {key: 'titanium', name: 'Titanium', threshold: 120, companion: 'mecha'},
-  {key: 'gold', name: 'Gold', threshold: 180, companion: 'kit'},
-  {key: 'platinum', name: 'Platinum', threshold: 270, companion: 'dragon'},
+  {key: 'obsidian', name: 'Obsidian', threshold: 90, companion: 'kit'},
+  {key: 'titanium', name: 'Titanium', threshold: 180, companion: 'dragon'},
   {key: 'diamond', name: 'Diamond', threshold: 365, companion: 'phoenix'},
 ];
 

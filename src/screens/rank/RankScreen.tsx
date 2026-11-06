@@ -65,7 +65,8 @@ export default function RankScreen() {
         {RANKS.map((r, i) => {
           const done = i < currentIndex;
           const isCurrent = i === currentIndex;
-          if (!done && !isCurrent && i > currentIndex + 1) return null; // keep it short
+          // reference shows one completed tier, the current one, and the next
+          if (i < currentIndex - 1 || i > currentIndex + 1) return null;
           return (
             <View
               key={r.key}

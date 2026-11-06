@@ -24,6 +24,8 @@ export type AppState = {
   equipped: CompanionId;
 
   isPremium: boolean;
+  /** ISO date (YYYY-MM-DD) of the last completed "still clean" hold */
+  lastHeldAt: string | null;
 
   // actions
   setHabit: (monthlySpend: number) => void;
@@ -32,6 +34,8 @@ export type AppState = {
   useRestore: () => void;
   startOver: () => void;
   equip: (id: CompanionId) => void;
+  /** record a completed hold for today */
+  markHeld: () => void;
   setPremium: (v: boolean) => void;
   resetAll: () => void;
 };
@@ -52,6 +56,7 @@ export const useStore = create<AppState>()(
       journal: [],
       equipped: 'puff',
       isPremium: false,
+      lastHeldAt: null,
 
       // Capture the habit during onboarding (does not finish onboarding).
       setHabit: monthlySpend =>
@@ -86,6 +91,8 @@ export const useStore = create<AppState>()(
 
       equip: id => set({equipped: id}),
 
+      markHeld: () => set({lastHeldAt: dayjs().format('YYYY-MM-DD')}),
+
       setPremium: v => set({isPremium: v}),
 
       resetAll: () =>
@@ -96,6 +103,7 @@ export const useStore = create<AppState>()(
           journal: [],
           equipped: 'puff',
           isPremium: false,
+          lastHeldAt: null,
         }),
     }),
     {

@@ -29,5 +29,5 @@ export default function Screen({children, scroll, dark, contentStyle}: Props) {
 const styles = StyleSheet.create({
   safe: {flex: 1},
   flex: {flex: 1},
-  scrollContent: {paddingBottom: 32},
+  scrollContent: {paddingBottom: 32, flexGrow: 1},
 });

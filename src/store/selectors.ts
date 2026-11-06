@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import {useStore} from './index';
 import {currentStreakDays, lifetimeDays} from '@/lib/streak';
 import {rankForDays, unlockedCompanions} from '@/lib/ranks';
@@ -32,3 +33,7 @@ export const useUnlocked = () => {
   const life = useLifetimeDays();
   return unlockedCompanions(life);
 };
+
+/** True when the "still clean" hold has already been completed today. */
+export const useHeldToday = () =>
+  useStore(s => s.lastHeldAt === dayjs().format('YYYY-MM-DD'));
