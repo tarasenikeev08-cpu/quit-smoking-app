@@ -10,6 +10,13 @@ import {useStore} from '@/store';
 import {useUnlocked, useRank} from '@/store/selectors';
 import {COMPANIONS} from '@/lib/companions';
 
+/**
+ * COLLECTION, per Ember_Proportions.md.
+ * header 8.5% · gap 3% · equipped card 11% · gap 3% · grid 45% ·
+ * [THE ONE FLEX GAP] · footnote 5%
+ *
+ * Cells are labelled with the COMPANION's name (Sprout), never its rank's.
+ */
 export default function CollectionScreen() {
   const unlocked = useUnlocked();
   const m = useMetrics();
@@ -21,26 +28,36 @@ export default function CollectionScreen() {
   const unlockedCount = unlocked.length;
   const equippedMeta = COMPANIONS.find(c => c.id === equipped) ?? COMPANIONS[0];
 
+  const cellH = m.h(0.138);
+  const cellGap = m.h(0.018);
+  const art = Math.round(cellH * 0.46);
+
   return (
     <Screen scroll contentStyle={[styles.content, {paddingHorizontal: m.gutter}]}>
-      <View style={[styles.header, {height: m.band.header}]}>
+      <View style={[styles.header, {height: m.h(0.085)}]}>
         <Text style={[T.label, {color: colors.muted}]}>Collection</Text>
-        <Text style={[T.h2, {color: colors.ink}]}>{unlockedCount} of {COMPANIONS.length} unlocked</Text>
+        <Text style={[T.h2, {color: colors.ink}]}>
+          {unlockedCount} of {COMPANIONS.length} unlocked
+        </Text>
       </View>
 
-      <View style={styles.equipCard}>
-        <Companion id={equippedMeta.id} size={40} />
+      <View style={{height: m.h(0.03)}} />
+
+      <View style={[styles.equipCard, {height: m.h(0.11)}]}>
+        <Companion id={equippedMeta.id} size={Math.round(m.h(0.11) * 0.52)} />
         <View style={styles.equipInfo}>
-          <Text style={[T.body, {fontWeight: "500", color: colors.ink}]}>{equippedMeta.name}</Text>
+          <Text style={[T.body, {fontWeight: '500', color: colors.ink}]}>{equippedMeta.name}</Text>
           <Text style={[T.caption, {color: colors.muted}]}>Equipped</Text>
         </View>
         <Icon name="check" size={18} />
       </View>
 
-      <View style={styles.grid}>
+      <View style={{height: m.h(0.03)}} />
+
+      <View style={[styles.grid, {gap: cellGap}]}>
         {COMPANIONS.map(c => {
           const isUnlocked = unlocked.includes(c.id);
-          const isNext = next && next.companion === c.id;
+          const isNext = !!next && next.companion === c.id && !isUnlocked;
           const isEquipped = equipped === c.id;
 
           return (
@@ -48,8 +65,11 @@ export default function CollectionScreen() {
               key={c.id}
               disabled={!isUnlocked}
               onPress={() => equip(c.id)}
+              accessibilityRole="button"
+              accessibilityLabel={c.name}
               style={[
                 styles.cell,
+                {height: cellH},
                 isUnlocked && styles.cellUnlocked,
                 isEquipped && styles.cellEquipped,
                 isNext && styles.cellNext,
@@ -57,20 +77,20 @@ export default function CollectionScreen() {
               ]}>
               {isUnlocked ? (
                 <>
-                  <Companion id={c.id} size={34} face={false} />
-                  <Text style={[T.caption, {color: colors.ink, marginTop: 4}]}>{c.name}</Text>
+                  <Companion id={c.id} size={art} face={false} />
+                  <Text style={[T.caption, styles.cellTxt, {color: colors.ink}]}>{c.name}</Text>
                 </>
               ) : isNext ? (
                 <>
-                  <Companion id={c.id} size={34} face={false} locked />
-                  <Text style={[T.caption, styles.cellNextTxt, {color: colors.ink}]}>
-                    {c.rankName} · {daysToNext}d
+                  <Companion id={c.id} size={art} face={false} locked />
+                  <Text style={[T.caption, styles.cellTxt, styles.cellNextTxt, {color: colors.ink}]}>
+                    {c.name} · {daysToNext}d
                   </Text>
                 </>
               ) : (
                 <>
-                  <Icon name="lock" size={20} color={colors.frame} />
-                  <Text style={[T.caption, {color: colors.frame, marginTop: 6}]}>{c.name}</Text>
+                  <Icon name="lock" size={Math.round(art * 0.6)} color={colors.frame} />
+                  <Text style={[T.caption, styles.cellTxt, {color: colors.frame}]}>{c.name}</Text>
                 </>
               )}
             </Pressable>
@@ -78,24 +98,27 @@ export default function CollectionScreen() {
         })}
       </View>
 
+      {/* ---- THE ONE FLEX GAP ---- */}
       <View style={styles.flexGap} />
-      <Text style={[T.caption, styles.footnote, {color: colors.muted}]}>Tap an unlocked companion to equip it.</Text>
+
+      <View style={[styles.footnoteBand, {height: m.h(0.05)}]}>
+        <Text style={[T.caption, styles.footnote, {color: colors.muted}]}>
+          Tap an unlocked companion to equip it.
+        </Text>
+      </View>
     </Screen>
   );
 }
-
-const COL_GAP = 12;
 
 const styles = StyleSheet.create({
   content: {flexGrow: 1},
   header: {alignItems: 'center', justifyContent: 'flex-end'},
 
   equipCard: {
-    marginTop: 16,
     borderWidth: 1.5,
     borderColor: colors.ink,
     borderRadius: radius.card,
-    padding: 16,
+    paddingHorizontal: 16,
     backgroundColor: colors.card,
     flexDirection: 'row',
     alignItems: 'center',
@@ -103,25 +126,24 @@ const styles = StyleSheet.create({
   },
   equipInfo: {flex: 1},
 
-  grid: {marginTop: 16, flexDirection: 'row', flexWrap: 'wrap', gap: COL_GAP},
+  grid: {flexDirection: 'row', flexWrap: 'wrap'},
   cell: {
     flexBasis: '30%',
     flexGrow: 1,
     borderWidth: 1.5,
     borderRadius: radius.cardSm,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     alignItems: 'center',
-    minHeight: 88,
     justifyContent: 'center',
   },
   cellUnlocked: {borderColor: colors.ink, backgroundColor: colors.card},
   cellEquipped: {borderColor: colors.ink, backgroundColor: colors.soft},
   cellNext: {borderColor: colors.ink, borderStyle: 'dashed'},
   cellLocked: {borderColor: colors.hair},
-  cellNextTxt: {marginTop: 4, fontWeight: '500', textAlign: 'center'},
+  cellTxt: {marginTop: 6, textAlign: 'center'},
+  cellNextTxt: {fontWeight: '500'},
 
-  // THE ONE FLEX GAP — footnote anchored to the bottom
-  flexGap: {flex: 1, minHeight: 16},
-  footnote: {textAlign: 'center', marginTop: 16, paddingBottom: 8},
+  flexGap: {flex: 1},
+  footnoteBand: {justifyContent: 'center'},
+  footnote: {textAlign: 'center'},
 });

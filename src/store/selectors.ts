@@ -1,3 +1,4 @@
+import {useMemo} from 'react';
 import dayjs from 'dayjs';
 import {useStore} from './index';
 import {currentStreakDays, lifetimeDays} from '@/lib/streak';
@@ -27,11 +28,19 @@ export const useSavings = () => {
   };
 };
 
-export const useInsights = () => useStore(s => computeInsights(s.journal));
+/**
+ * Insights are DERIVED, so they must not be computed inside the store selector:
+ * a fresh object every snapshot makes useSyncExternalStore re-render forever.
+ * Subscribe to the raw journal and memoise the derivation.
+ */
+export const useInsights = () => {
+  const journal = useStore(s => s.journal);
+  return useMemo(() => computeInsights(journal), [journal]);
+};
 
 export const useUnlocked = () => {
   const life = useLifetimeDays();
-  return unlockedCompanions(life);
+  return useMemo(() => unlockedCompanions(life), [life]);
 };
 
 /** True when the "still clean" hold has already been completed today. */

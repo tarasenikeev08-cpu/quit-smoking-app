@@ -16,6 +16,11 @@ export const COMPANIONS: CompanionMeta[] = RANKS.map(r => ({
   rankName: r.name,
 }));
 
+/** The companion a rank unlocks, by its name — never the rank's own name. */
+export function companionNameForRank(rank: {companion: CompanionId}): string {
+  return companionName(rank.companion);
+}
+
 export function companionName(id: CompanionId): string {
   const names: Record<CompanionId, string> = {
     puff: 'Puff',

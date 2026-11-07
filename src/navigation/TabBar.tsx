@@ -30,7 +30,14 @@ export default function TabBar({state, navigation}: BottomTabBarProps) {
           }
         };
         return (
-          <Pressable key={route.key} style={styles.tab} onPress={onPress} hitSlop={8}>
+          <Pressable
+            key={route.key}
+            style={styles.tab}
+            onPress={onPress}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={route.name}
+            accessibilityState={{selected: focused}}>
             <Icon
               name={ICONS[route.name] ?? 'circle'}
               size={controls.tabIcon}

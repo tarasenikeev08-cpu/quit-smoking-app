@@ -14,6 +14,12 @@ const CHART_W = 250;
 const CHART_H = 80;
 const X_LABELS = ['6am', 'noon', '6pm', 'mid'];
 
+/**
+ * JOURNAL — PATTERNS, per Ember_Proportions.md.
+ * header 6.5% · insight card 13% · gap 4% · chart label 3.5% · chart 22% ·
+ * x labels 3% · gap 4% · tip card 13% · [THE ONE FLEX GAP] ·
+ * See full log 5.9% · bottom 3%
+ */
 export default function PatternsScreen() {
   const insights = useInsights();
   const m = useMetrics();
@@ -23,7 +29,6 @@ export default function PatternsScreen() {
 
   const hasData = insights.entryCount > 0;
 
-  // map 6 buckets (0..5 craving) to chart points
   const pts = insights.cravingByBucket
     .map((v, i) => {
       const x = 6 + (i / 5) * (CHART_W - 12);
@@ -42,9 +47,11 @@ export default function PatternsScreen() {
 
   return (
     <Screen scroll contentStyle={[styles.content, {paddingHorizontal: m.gutter}]}>
-      <Text style={[T.label, styles.kicker, {color: colors.muted}]}>Your patterns</Text>
+      <View style={[styles.headerBand, {height: m.h(0.065)}]}>
+        <Text style={[T.label, styles.kicker, {color: colors.muted}]}>Your patterns</Text>
+      </View>
 
-      <Card strong style={styles.highlight}>
+      <Card strong style={[styles.insight, {height: m.h(0.13)}]}>
         <Text style={[T.body, {color: colors.ink}]}>
           {insights.alcoholMultiplier
             ? `Your cravings hit ${insights.alcoholMultiplier}× harder on days you drink.`
@@ -54,13 +61,17 @@ export default function PatternsScreen() {
         </Text>
       </Card>
 
-      <Text style={[T.label, styles.sectionLabel, {color: colors.muted}]}>Craving by time of day</Text>
-      <Svg width="100%" height={CHART_H} viewBox={`0 0 ${CHART_W} ${CHART_H}`}>
+      <View style={{height: m.h(0.04)}} />
+
+      <View style={[styles.chartLabelBand, {height: m.h(0.035)}]}>
+        <Text style={[T.label, {color: colors.muted}]}>Craving by time of day</Text>
+      </View>
+      <Svg width="100%" height={m.h(0.22)} viewBox={`0 0 ${CHART_W} ${CHART_H}`} preserveAspectRatio="none">
         <Line x1="0" y1={CHART_H - 16} x2={CHART_W} y2={CHART_H - 16} stroke={colors.border} />
         {hasData && <Polyline points={pts} fill="none" stroke={colors.ink} strokeWidth={2.4} />}
         {peakPoint && <Circle cx={peakPoint.x} cy={peakPoint.y} r={4} fill={colors.accent} />}
       </Svg>
-      <View style={styles.xLabels}>
+      <View style={[styles.xLabels, {height: m.h(0.03)}]}>
         {X_LABELS.map(l => (
           <Text key={l} style={[T.caption, {color: colors.frame}]}>
             {l}
@@ -68,7 +79,9 @@ export default function PatternsScreen() {
         ))}
       </View>
 
-      <Card style={styles.secondary}>
+      <View style={{height: m.h(0.04)}} />
+
+      <Card style={[styles.tip, {height: m.h(0.13)}]}>
         <Text style={[T.body, {color: colors.ink}]}>
           {insights.peakLabel
             ? `${cap(insights.peakLabel)} is your weak spot. Plan something around then.`
@@ -76,22 +89,28 @@ export default function PatternsScreen() {
         </Text>
       </Card>
 
-      <View style={styles.grow} />
+      {/* ---- THE ONE FLEX GAP ---- */}
+      <View style={styles.flexGap} />
+
       <Button
         label={showLog ? 'Hide log' : 'See full log'}
         variant="outline"
-        style={styles.logBtn}
         onPress={() => setShowLog(v => !v)}
       />
+      <View style={{height: m.h(0.03)}} />
 
       {showLog && (
         <View style={styles.log}>
-          {journal.length === 0 && <Text style={[T.caption, styles.empty, {color: colors.muted}]}>No check-ins yet.</Text>}
+          {journal.length === 0 && (
+            <Text style={[T.caption, styles.empty, {color: colors.muted}]}>No check-ins yet.</Text>
+          )}
           {journal.map((e, i) => (
             <View key={e.id}>
               {i > 0 && <Hair />}
               <View style={styles.logRow}>
-                <Text style={[T.body, {fontWeight: "500", color: colors.ink}]}>{dayjs(e.createdAt).format('MMM D · h:mma')}</Text>
+                <Text style={[T.body, {fontWeight: '500', color: colors.ink}]}>
+                  {dayjs(e.createdAt).format('MMM D · h:mma')}
+                </Text>
                 <Text style={[T.caption, {color: colors.muted, marginTop: 4}]}>
                   craving {e.craving}
                   {e.triggers.length ? ` · ${e.triggers.join(', ')}` : ''}
@@ -109,15 +128,14 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const styles = StyleSheet.create({
   content: {flexGrow: 1},
-  kicker: {textAlign: 'center', marginBottom: 16},
-  highlight: {marginBottom: 12},
-  sectionLabel: {marginBottom: 12},
-  xLabels: {flexDirection: 'row', justifyContent: 'space-between', marginTop: 4},
-  secondary: {marginTop: 16, borderColor: colors.border},
-  // THE ONE FLEX GAP — "See full log" anchored to the bottom
-  grow: {flex: 1, minHeight: 16},
-  logBtn: {marginTop: 20},
-  log: {marginTop: 16},
+  headerBand: {justifyContent: 'flex-end'},
+  kicker: {textAlign: 'center'},
+  insight: {justifyContent: 'center'},
+  chartLabelBand: {justifyContent: 'flex-end'},
+  xLabels: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start'},
+  tip: {justifyContent: 'center', borderColor: colors.border},
+  flexGap: {flex: 1},
+  log: {marginTop: 4},
   logRow: {paddingVertical: 12},
   empty: {textAlign: 'center', paddingVertical: 12},
 });

@@ -67,6 +67,11 @@ export function useMetrics() {
     height,
     base,
 
+    /** Arbitrary band height as a fraction of SCREEN HEIGHT (the doc's unit). */
+    h,
+    /** Arbitrary width as a fraction of SCREEN WIDTH. */
+    w,
+
     gutter: w(WIDTH.gutter),
     companionSize: w(WIDTH.companion),
     statGap: w(WIDTH.statGap),

@@ -9,11 +9,13 @@ import {colors, radius} from '@/theme';
 import {useMetrics} from '@/theme/metrics';
 import {useRank, useStreakDays, useLifetimeDays, useSavings} from '@/store/selectors';
 import {RANKS} from '@/lib/ranks';
+import {companionNameForRank} from '@/lib/companions';
 
 /**
- * RANK — Ember_Proportions.md band order:
- * header → saved hero card (companion-sized 30% band) → lifetime/streak row →
- * [THE ONE FLEX GAP] → tier list → note → footnote.
+ * RANK, per Ember_Proportions.md.
+ * header 6.5% · rank name 6% · gap 2% · saved hero 21% · gap 1.5% ·
+ * lifetime/streak row 9.5% · gap 2% · progress 5% ·
+ * [THE ONE FLEX GAP] · tier list 13.8% · gap 1.5% · note 5.5% · slip link 4%
  */
 export default function RankScreen() {
   const nav = useNavigation<any>();
@@ -25,20 +27,22 @@ export default function RankScreen() {
   const m = useMetrics();
   const T = m.type;
 
+  const tierH = m.h(0.046);
+
   return (
     <Screen scroll contentStyle={[styles.content, {paddingHorizontal: m.gutter}]}>
-      {/* header 6.5% */}
       <View style={[styles.header, {height: m.band.header}]}>
         <Text style={[T.label, {color: colors.muted}]}>Your rank</Text>
       </View>
-      <Text style={[T.h1, styles.rankName, {color: colors.ink}]}>
-        {current.name.toUpperCase()}
-      </Text>
 
-      <View style={{height: m.band.gapAboveCompanion}} />
+      <View style={[styles.rankNameBand, {height: m.h(0.06)}]}>
+        <Text style={[T.h1, styles.rankName, {color: colors.ink}]}>{current.name.toUpperCase()}</Text>
+      </View>
 
-      {/* saved hero card — same 30% band the companion owns on Home */}
-      <View style={[styles.savedCard, {height: m.band.companion}]}>
+      <View style={{height: m.h(0.02)}} />
+
+      {/* saved hero — the band the companion owns on Home */}
+      <View style={[styles.savedCard, {height: m.h(0.21)}]}>
         <Text style={[T.label, {color: colors.muted}]}>Saved so far</Text>
         <Text style={[T.dayCount, styles.savedV, {color: colors.ink}]}>
           {habit.currencySymbol}
@@ -47,10 +51,9 @@ export default function RankScreen() {
         <Text style={[T.caption, {color: colors.muted}]}>≈ {packs} packs not bought</Text>
       </View>
 
-      <View style={{height: m.band.gapBelowCompanion}} />
+      <View style={{height: m.h(0.015)}} />
 
-      {/* lifetime / streak row — stat band 11% */}
-      <View style={[styles.miniRow, {height: m.band.statRow, gap: m.statGap}]}>
+      <View style={[styles.miniRow, {height: m.h(0.095), gap: m.statGap}]}>
         <View style={styles.mini}>
           <Text style={[T.statValue, {color: colors.ink}]}>{lifetime}</Text>
           <Text style={[T.label, {color: colors.muted}]}>lifetime days</Text>
@@ -64,24 +67,27 @@ export default function RankScreen() {
         </View>
       </View>
 
-      {next && (
-        <View style={{marginTop: m.band.gap}}>
-          <View style={styles.progressLabels}>
-            <Text style={[T.caption, {color: colors.muted}]}>{current.name}</Text>
-            <Text style={[T.caption, {color: colors.muted}]}>
-              {next.name} · {daysToNext}d
-            </Text>
-          </View>
-          <View style={styles.track}>
-            <View style={[styles.fill, {width: `${Math.round(progress * 100)}%`}]} />
-          </View>
-        </View>
-      )}
+      <View style={{height: m.h(0.02)}} />
+
+      <View style={[styles.progressBand, {height: m.h(0.05)}]}>
+        {next && (
+          <>
+            <View style={styles.progressLabels}>
+              <Text style={[T.caption, {color: colors.muted}]}>{current.name}</Text>
+              <Text style={[T.caption, {color: colors.muted}]}>
+                {next.name} · {daysToNext}d
+              </Text>
+            </View>
+            <View style={styles.track}>
+              <View style={[styles.fill, {width: `${Math.round(progress * 100)}%`}]} />
+            </View>
+          </>
+        )}
+      </View>
 
       {/* ---- THE ONE FLEX GAP ---- */}
       <View style={styles.flexGap} />
 
-      {/* tier list */}
       <View>
         {RANKS.map((r, i) => {
           const done = i < currentIndex;
@@ -90,12 +96,7 @@ export default function RankScreen() {
           return (
             <View
               key={r.key}
-              style={[
-                styles.tier,
-                {height: m.controls.chip.height * 1.5},
-                isCurrent && styles.tierCurrent,
-                done && styles.tierDone,
-              ]}>
+              style={[styles.tier, {height: tierH}, isCurrent && styles.tierCurrent, done && styles.tierDone]}>
               {done ? (
                 <Icon name="checkFilled" size={18} />
               ) : isCurrent ? (
@@ -103,30 +104,27 @@ export default function RankScreen() {
               ) : (
                 <Icon name="lock" size={18} color={colors.frame} />
               )}
-              <Text
-                style={[
-                  T.body,
-                  styles.tierName,
-                  isCurrent && {color: colors.paper, fontWeight: '500'},
-                ]}>
+              <Text style={[T.body, styles.tierName, isCurrent && {color: colors.paper, fontWeight: '500'}]}>
                 {r.name}
               </Text>
-              <Text style={[T.caption, {color: colors.muted}]}>
-                {r.threshold}d{isCurrent ? ' · now' : ''}
+              <Text style={[T.caption, {color: isCurrent ? colors.mutedOnInk : colors.muted}]}>
+                {companionNameForRank(r)} · {r.threshold}d{isCurrent ? ' · now' : ''}
               </Text>
             </View>
           );
         })}
       </View>
 
-      <View style={[styles.note, {marginTop: m.band.gap}]}>
+      <View style={{height: m.h(0.015)}} />
+
+      <View style={[styles.note, {height: m.h(0.055)}]}>
         <Icon name="shieldCheck" size={14} />
         <Text style={[T.caption, styles.noteTxt]}>
           A slip breaks your streak, not your rank or your savings.
         </Text>
       </View>
 
-      <Pressable onPress={() => nav.navigate('Slip')} hitSlop={8} style={styles.slipLink}>
+      <Pressable onPress={() => nav.navigate('Slip')} hitSlop={8} style={[styles.slipLink, {height: m.h(0.04)}]}>
         <Text style={[T.caption, styles.slipLinkTxt]}>Had a slip?</Text>
       </Pressable>
     </Screen>
@@ -136,6 +134,7 @@ export default function RankScreen() {
 const styles = StyleSheet.create({
   content: {flexGrow: 1},
   header: {alignItems: 'center', justifyContent: 'flex-end'},
+  rankNameBand: {justifyContent: 'center'},
   rankName: {textAlign: 'center'},
 
   savedCard: {
@@ -160,11 +159,12 @@ const styles = StyleSheet.create({
   },
   miniVRow: {flexDirection: 'row', alignItems: 'center', gap: 4},
 
+  progressBand: {justifyContent: 'flex-end'},
   progressLabels: {flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8},
   track: {height: 8, backgroundColor: colors.border, borderRadius: 10, overflow: 'hidden'},
   fill: {height: '100%', backgroundColor: colors.ink},
 
-  flexGap: {flex: 1, minHeight: 16},
+  flexGap: {flex: 1},
 
   tier: {
     flexDirection: 'row',
@@ -179,7 +179,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ink,
     borderRadius: radius.stat,
     borderBottomWidth: 0,
-    marginVertical: 2,
   },
   tierName: {flex: 1, color: colors.ink},
 
@@ -187,12 +186,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    padding: 12,
+    paddingHorizontal: 12,
     backgroundColor: colors.softer,
     borderRadius: radius.stat,
   },
   noteTxt: {flex: 1, color: '#6A6A64'},
 
-  slipLink: {alignItems: 'center', marginTop: 16, paddingBottom: 8},
+  slipLink: {alignItems: 'center', justifyContent: 'center'},
   slipLinkTxt: {color: colors.muted, textDecorationLine: 'underline'},
 });

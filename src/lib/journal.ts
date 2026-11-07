@@ -7,7 +7,6 @@ export const TRIGGERS = [
   'Social',
   'After meal',
   'Boredom',
-  'Driving',
 ] as const;
 export type Trigger = (typeof TRIGGERS)[number];
 

@@ -1,8 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Pressable, ActivityIndicator} from 'react-native';
+import {View, Text, StyleSheet, Pressable, ActivityIndicator, StatusBar} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {StatusBar} from 'react-native';
 
 import Flame from '@/components/Flame';
 import {colors, radius} from '@/theme';
@@ -10,6 +9,11 @@ import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
 import {getOffering, purchase, restore, MockPlan} from '@/services/purchases';
 
+/**
+ * PAYWALL, per Ember_Proportions.md.
+ * top 6.5% · flame hero 24% · headline 14% · gap 4% · plan card 15% ·
+ * fine print 5.5% · [THE ONE FLEX GAP] · CTA 6.2% · links 6% · bottom 3%
+ */
 export default function PaywallScreen() {
   const nav = useNavigation<any>();
   const onboarded = useStore(s => s.onboarded);
@@ -47,19 +51,32 @@ export default function PaywallScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" />
       <View style={[styles.wrap, {paddingHorizontal: m.gutter, paddingTop: m.band.header}]}>
-        <View style={styles.flameRow}>
-          <Text style={[T.h1, {color: colors.paper}]}>0</Text>
-          <Flame size={24} />
+        <View style={[styles.flameRow, {height: m.h(0.24)}]}>
+          <Text style={[T.dayCount, {color: colors.paper}]}>0</Text>
+          <Flame size={Math.round(m.h(0.12) / 1.25)} />
         </View>
-        <Text style={[T.h2, styles.headline, {color: colors.paper}]}>Protect your streak from day one.</Text>
 
-        <View style={styles.planCard}>
+        <View style={[styles.headlineBand, {height: m.h(0.14)}]}>
+          <Text style={[T.h2, styles.headline, {color: colors.paper, lineHeight: Math.round(T.h2.fontSize * 1.3)}]}>
+            Protect your streak from day one.
+          </Text>
+        </View>
+
+        <View style={{height: m.h(0.04)}} />
+
+        <View style={[styles.planCard, {height: m.h(0.15)}]}>
           <View style={styles.badge}>
-            <Text style={[T.caption, styles.badgeTxt, {color: colors.ink}]}>{plan ? plan.discountLabel : '…'}</Text>
+            <Text style={[T.caption, styles.badgeTxt, {color: colors.ink}]}>
+              {plan ? plan.discountLabel : '…'}
+            </Text>
           </View>
-          <View>
-            <Text style={[T.body, {fontWeight: "500", color: colors.paper}]}>{plan?.title ?? 'First month'}</Text>
-            <Text style={[T.caption, {color: colors.muted, marginTop: 4}]}>{plan?.subtitle ?? 'then $5 / month'}</Text>
+          <View style={styles.planInfo}>
+            <Text style={[T.body, {fontWeight: '500', color: colors.paper}]}>
+              {plan?.title ?? 'First month'}
+            </Text>
+            <Text style={[T.caption, {color: colors.muted, marginTop: 4}]}>
+              {plan?.subtitle ?? 'then $5 / month'}
+            </Text>
           </View>
           <View style={styles.priceRow}>
             {plan?.strikePrice ? (
@@ -68,11 +85,21 @@ export default function PaywallScreen() {
             <Text style={[T.statValue, styles.price, {color: colors.paper}]}>{plan?.price ?? '$3'}</Text>
           </View>
         </View>
-        <Text style={[T.caption, styles.finePrint, {color: colors.mutedOnInk}]}>Less than one pack. Cancel anytime.</Text>
 
-        <View style={styles.spacer} />
+        <View style={[styles.fineBand, {height: m.h(0.055)}]}>
+          <Text style={[T.caption, styles.finePrint, {color: colors.mutedOnInk}]}>
+            Less than one pack. Cancel anytime.
+          </Text>
+        </View>
 
-        <Pressable style={[styles.cta, {height: m.controls.primary.height, borderRadius: m.controls.primary.radius}]} onPress={onClaim} disabled={busy || !plan}>
+        {/* ---- THE ONE FLEX GAP ---- */}
+        <View style={styles.flexGap} />
+
+        <Pressable
+          accessibilityRole="button"
+          style={[styles.cta, {height: m.controls.primary.height, borderRadius: m.controls.primary.radius}]}
+          onPress={onClaim}
+          disabled={busy || !plan}>
           {busy ? (
             <ActivityIndicator color={colors.ink} />
           ) : (
@@ -80,7 +107,7 @@ export default function PaywallScreen() {
           )}
         </Pressable>
 
-        <View style={styles.footerLinks}>
+        <View style={[styles.footerLinks, {height: m.h(0.06)}]}>
           <Pressable onPress={onRestore} hitSlop={10}>
             <Text style={[T.caption, {color: colors.mutedOnInk}]}>Restore</Text>
           </Pressable>
@@ -88,6 +115,7 @@ export default function PaywallScreen() {
             <Text style={[T.caption, {color: colors.mutedOnInk}]}>Maybe later</Text>
           </Pressable>
         </View>
+        <View style={{height: m.h(0.03)}} />
       </View>
     </SafeAreaView>
   );
@@ -95,19 +123,21 @@ export default function PaywallScreen() {
 
 const styles = StyleSheet.create({
   safe: {flex: 1, backgroundColor: colors.ink},
-  wrap: {flex: 1, paddingBottom: 16},
-  flameRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8},
-  headline: {textAlign: 'center', marginTop: 12},
+  wrap: {flex: 1},
+  flameRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10},
+  headlineBand: {justifyContent: 'center'},
+  headline: {textAlign: 'center'},
+
   planCard: {
-    marginTop: 24,
     borderWidth: 1.5,
     borderColor: colors.accent,
-    borderRadius: radius.cardSm,
-    padding: 16,
+    borderRadius: radius.card,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  planInfo: {flex: 1},
   badge: {
     position: 'absolute',
     top: -10,
@@ -121,9 +151,11 @@ const styles = StyleSheet.create({
   priceRow: {flexDirection: 'row', alignItems: 'center'},
   strike: {textDecorationLine: 'line-through'},
   price: {marginLeft: 8},
-  finePrint: {textAlign: 'center', marginTop: 12},
-  // THE ONE FLEX GAP — CTA anchored to the bottom
-  spacer: {flex: 1},
+
+  fineBand: {justifyContent: 'center'},
+  finePrint: {textAlign: 'center'},
+
+  flexGap: {flex: 1},
   cta: {backgroundColor: colors.paper, alignItems: 'center', justifyContent: 'center'},
-  footerLinks: {flexDirection: 'row', justifyContent: 'center', gap: 32, marginTop: 20},
+  footerLinks: {flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 32},
 });
