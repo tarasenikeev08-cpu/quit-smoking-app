@@ -2,11 +2,41 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <meta name="format-detection" content="telephone=no" />
     <title>Ember</title>
     <style>
       html, body { height: 100%; margin: 0; }
-      body { background: #C9C7BE; }
+      body {
+        background: #C9C7BE;
+        /* Disable iOS double-tap-to-zoom while allowing normal scroll. */
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      /* Press-and-hold and tap targets: block the browser's text-selection,
+         callout menu, and tap-highlight behaviours so the gesture layer gets
+         every touch cleanly. Applied to every control and every descendant,
+         so a <Text> inside a <Pressable> cannot swallow the hold. */
+      [role="button"],
+      [role="button"] *,
+      [data-focusable="true"],
+      [data-focusable="true"] * {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+
+      /* The hold bar is a sustained gesture — no scroll, no zoom, no pan. */
+      [data-hold-target="true"],
+      [data-hold-target="true"] * {
+        touch-action: none;
+      }
+
       /* centre the app in a phone-width column on desktop */
       #root {
         width: 100%;

@@ -80,8 +80,13 @@ export default function HoldButton({
         onLayout={onLayout}
         accessibilityRole="button"
         accessibilityLabel={label}
+        // react-native-web: data-* attributes land on the DOM node, so the
+        // stylesheet's [data-hold-target="true"] rule applies touch-action:none.
+        // (RN's Pressable type has no dataSet prop; RN Web reads it at runtime.)
+        {...({dataSet: {holdTarget: 'true'}} as any)}
         style={[
           styles.track,
+          styles.noSelect,
           {height: m.controls.hold.height, borderRadius: m.controls.hold.radius},
         ]}>
         {/* ink fill sweeping left -> right */}
@@ -93,7 +98,7 @@ export default function HoldButton({
           pointerEvents="none"
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants">
-          <Text style={[m.type.button, {color: colors.ink}]}>{label}</Text>
+          <Text selectable={false} style={[m.type.button, styles.noSelect, {color: colors.ink}]}>{label}</Text>
         </View>
 
         {/* inverted label, clipped to the fill so letters flip as it passes */}
@@ -103,13 +108,21 @@ export default function HoldButton({
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants">
           <View style={[styles.labelLayer, {width}]}>
-            <Text style={[m.type.button, {color: colors.paper}]}>{label}</Text>
+            <Text selectable={false} style={[m.type.button, styles.noSelect, {color: colors.paper}]}>{label}</Text>
           </View>
         </Animated.View>
       </Pressable>
     </Animated.View>
   );
 }
+
+// RN Web maps userSelect/touchAction to the matching CSS properties. The
+// -webkit-touch-callout rule in public/index.html handles iOS Safari's long-
+// press callout, which has no RN style equivalent.
+const noSelect = {
+  userSelect: 'none',
+  touchAction: 'none',
+} as any;
 
 const styles = StyleSheet.create({
   track: {
@@ -119,6 +132,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
   },
+  noSelect,
   fill: {
     position: 'absolute',
     left: 0,

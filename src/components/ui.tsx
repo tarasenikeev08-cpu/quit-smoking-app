@@ -77,8 +77,10 @@ export function Button({label, onPress, variant = 'primary', disabled, style}: B
         style,
       ]}>
       <Text
+        selectable={false}
         style={[
           m.type.button,
+          styles.btnText,
           {color: variant === 'primary' ? colors.onInk : colors.ink},
         ]}>
         {label}
@@ -169,6 +171,7 @@ export function Pill({
       ]}>
       {icon}
       <Text
+        selectable={false}
         style={[
           m.type.label,
           styles.chipText,
@@ -187,9 +190,17 @@ export const Hair = ({style}: {style?: StyleProp<ViewStyle>}) => (
   <View style={[styles.hair, style]} />
 );
 
+// RN Web maps these to the matching CSS properties, so Pressables don't
+// show a text-selection caret or the iOS tap-highlight on long-press.
+const noSelect = {
+  userSelect: 'none',
+  touchAction: 'manipulation',
+} as any;
+
 const styles = StyleSheet.create({
-  btnBase: {alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20},
+  btnBase: {alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, ...noSelect},
   btnPrimary: {backgroundColor: colors.ink},
+  btnText: noSelect,
   btnOutline: {borderWidth: 1.5, borderColor: colors.ink, backgroundColor: 'transparent'},
   btnLight: {backgroundColor: colors.paper},
   pressed: {opacity: 0.8},
@@ -213,7 +224,7 @@ const styles = StyleSheet.create({
   },
   statVRow: {flexDirection: 'row', alignItems: 'center', marginTop: 2},
 
-  chip: {flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14},
+  chip: {flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, ...noSelect},
   chipActive: {backgroundColor: colors.ink},
   chipIdle: {backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.border},
   chipText: {textTransform: 'none', letterSpacing: 0},
