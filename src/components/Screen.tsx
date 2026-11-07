@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, ScrollView, StyleSheet, ViewStyle, StatusBar} from 'react-native';
+import {View, ScrollView, StyleSheet, ViewStyle, StyleProp, StatusBar} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {colors} from '@/theme';
 
@@ -7,7 +7,7 @@ type Props = {
   children: React.ReactNode;
   scroll?: boolean;
   dark?: boolean;
-  contentStyle?: ViewStyle;
+  contentStyle?: StyleProp<ViewStyle>;
 };
 
 /** Warm-paper screen shell with safe-area insets. */

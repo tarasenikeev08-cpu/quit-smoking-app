@@ -8,7 +8,8 @@ import {
   ViewStyle,
   StyleProp,
 } from 'react-native';
-import {colors, controls, radius, cardPadding, type as T} from '@/theme';
+import {colors, radius, cardPadding} from '@/theme';
+import {useMetrics} from '@/theme/metrics';
 
 /* ---------------------------------- Text ---------------------------------- */
 
@@ -18,24 +19,31 @@ type TxtProps = {
   numberOfLines?: number;
 };
 
-/** Label token — 11 / 500 / +2 / UPPERCASE. */
-export const Label = ({children, style}: TxtProps) => (
-  <Text style={[T.label, {color: colors.muted}, style]}>{children}</Text>
-);
+/** Label token — 0.18x day-count, +2 letter, UPPERCASE. */
+export const Label = ({children, style}: TxtProps) => {
+  const m = useMetrics();
+  return <Text style={[m.type.label, {color: colors.muted}, style]}>{children}</Text>;
+};
 
-/** Caption token — 12 / 400. */
-export const Caption = ({children, style, numberOfLines}: TxtProps) => (
-  <Text numberOfLines={numberOfLines} style={[T.caption, {color: colors.muted}, style]}>
-    {children}
-  </Text>
-);
+/** Caption token — 0.2x day-count. */
+export const Caption = ({children, style, numberOfLines}: TxtProps) => {
+  const m = useMetrics();
+  return (
+    <Text numberOfLines={numberOfLines} style={[m.type.caption, {color: colors.muted}, style]}>
+      {children}
+    </Text>
+  );
+};
 
-/** Body token — 16 / 400. */
-export const Body = ({children, style, numberOfLines}: TxtProps) => (
-  <Text numberOfLines={numberOfLines} style={[T.body, {color: colors.ink}, style]}>
-    {children}
-  </Text>
-);
+/** Body token — 0.27x day-count. */
+export const Body = ({children, style, numberOfLines}: TxtProps) => {
+  const m = useMetrics();
+  return (
+    <Text numberOfLines={numberOfLines} style={[m.type.body, {color: colors.ink}, style]}>
+      {children}
+    </Text>
+  );
+};
 
 export const Muted = Caption;
 
@@ -44,15 +52,15 @@ export const Muted = Caption;
 type ButtonProps = {
   label: string;
   onPress?: () => void;
-  /** primary = solid ink 52/26 · outline = 50/25 · light = solid paper (on ink) */
+  /** primary = solid ink 6.2% · outline = 5.9% · light = solid paper (on ink) */
   variant?: 'primary' | 'outline' | 'light';
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
 export function Button({label, onPress, variant = 'primary', disabled, style}: ButtonProps) {
-  const dims =
-    variant === 'outline' ? controls.outline : controls.primary;
+  const m = useMetrics();
+  const dims = variant === 'outline' ? m.controls.outline : m.controls.primary;
   return (
     <Pressable
       onPress={onPress}
@@ -70,10 +78,8 @@ export function Button({label, onPress, variant = 'primary', disabled, style}: B
       ]}>
       <Text
         style={[
-          T.button,
-          variant === 'primary' && {color: colors.onInk},
-          variant === 'outline' && {color: colors.ink},
-          variant === 'light' && {color: colors.ink},
+          m.type.button,
+          {color: variant === 'primary' ? colors.onInk : colors.ink},
         ]}>
         {label}
       </Text>
@@ -105,7 +111,7 @@ export function Card({children, strong, style}: CardProps) {
 
 /* --------------------------------- Stat box -------------------------------- */
 
-/** Spec: height 64, radius 12, border 1.5, label 11 muted + value 24. */
+/** Stretches to the height of the stat row band (11% of screen height). */
 export function Stat({
   k,
   v,
@@ -117,6 +123,7 @@ export function Stat({
   strong?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
+  const m = useMetrics();
   return (
     <View
       style={[
@@ -124,10 +131,10 @@ export function Stat({
         {borderColor: strong ? colors.borderStrong : colors.border},
         style,
       ]}>
-      <Text style={[T.label, {color: colors.muted}]}>{k}</Text>
+      <Text style={[m.type.label, {color: colors.muted}]}>{k}</Text>
       <View style={styles.statVRow}>
         {typeof v === 'string' || typeof v === 'number' ? (
-          <Text style={styles.statV}>{v}</Text>
+          <Text style={[m.type.statValue, {color: colors.ink}]}>{v}</Text>
         ) : (
           v
         )}
@@ -138,7 +145,7 @@ export function Stat({
 
 /* ---------------------------------- Chip ---------------------------------- */
 
-/** Spec: height 32, radius 20, 11pt, selected ink/paper · unselected border/muted. */
+/** Chip — 3.8% of screen height, pill radius. */
 export function Pill({
   label,
   active,
@@ -150,14 +157,20 @@ export function Pill({
   onPress?: () => void;
   icon?: React.ReactNode;
 }) {
+  const m = useMetrics();
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      style={[styles.chip, active ? styles.chipActive : styles.chipIdle]}>
+      style={[
+        styles.chip,
+        {height: m.controls.chip.height, borderRadius: m.controls.chip.radius},
+        active ? styles.chipActive : styles.chipIdle,
+      ]}>
       {icon}
       <Text
         style={[
+          m.type.label,
           styles.chipText,
           {color: active ? colors.onInk : colors.muted},
           icon ? {marginLeft: 6} : null,
@@ -175,11 +188,7 @@ export const Hair = ({style}: {style?: StyleProp<ViewStyle>}) => (
 );
 
 const styles = StyleSheet.create({
-  btnBase: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
+  btnBase: {alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20},
   btnPrimary: {backgroundColor: colors.ink},
   btnOutline: {borderWidth: 1.5, borderColor: colors.ink, backgroundColor: 'transparent'},
   btnLight: {backgroundColor: colors.paper},
@@ -195,7 +204,7 @@ const styles = StyleSheet.create({
 
   stat: {
     flex: 1,
-    height: 64,
+    alignSelf: 'stretch',
     borderWidth: 1.5,
     borderRadius: radius.stat,
     paddingHorizontal: 12,
@@ -203,18 +212,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
   statVRow: {flexDirection: 'row', alignItems: 'center', marginTop: 2},
-  statV: {...T.statValue, color: colors.ink},
 
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: controls.chip.height,
-    borderRadius: controls.chip.radius,
-    paddingHorizontal: 14,
-  },
+  chip: {flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14},
   chipActive: {backgroundColor: colors.ink},
   chipIdle: {backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.border},
-  chipText: {fontSize: 11, fontWeight: '500'},
+  chipText: {textTransform: 'none', letterSpacing: 0},
 
   hair: {height: 1, backgroundColor: colors.hair},
 });

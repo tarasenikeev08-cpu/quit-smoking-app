@@ -7,24 +7,22 @@ import Companion from '@/components/Companion';
 import Icon from '@/components/Icon';
 import HoldButton from '@/components/HoldButton';
 import {Stat} from '@/components/ui';
-import {colors, controls, gutter, spacing, type as T} from '@/theme';
+import {colors, controls as fixed} from '@/theme';
+import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
 import {useStreakDays, useRank, useSavings, useHeldToday} from '@/store/selectors';
 import {haptic} from '@/lib/platform';
 
 /**
- * HOME — built to Ember_Spec_Sheet.md (390x844).
+ * HOME — built to Ember_Proportions.md. Every band is a percentage of screen
+ * height, so the screen is proportionally identical on any iPhone:
  *
- * header 44 · flexible spacer (40%) · companion 150x165 · gap 12 ·
- * day-count group · flexible spacer (60%) · stat row (64) · gap 16 ·
- * hold bar (56) · gap 16 · tab bar.
+ *   header 6.5% · gap 4% · companion 30% · gap 1.5% · count group 12% ·
+ *   [THE ONE FLEX GAP ~15%] · stat row 11% · gap 3% · hold bar 6.6% · gap 3%
  *
- * The two weighted spacers keep the companion generous up top and the action
- * block anchored low, with no single dead void.
+ * There is exactly ONE flexible gap, and it sits between the day count and the
+ * stat row — never above the companion, never below the hold bar.
  */
-const COMPANION_SIZE = 150;
-const COMPANION_BOX = 165;
-
 export default function HomeScreen() {
   const streak = useStreakDays();
   const {current} = useRank();
@@ -32,6 +30,7 @@ export default function HomeScreen() {
   const equipped = useStore(s => s.equipped);
   const markHeld = useStore(s => s.markHeld);
   const heldToday = useHeldToday();
+  const m = useMetrics();
 
   const react = useRef(new Animated.Value(0)).current;
   const onHoldComplete = () => {
@@ -51,74 +50,69 @@ export default function HomeScreen() {
   const scale = react.interpolate({inputRange: [0, 1], outputRange: [1, 1.12]});
   const lift = react.interpolate({inputRange: [0, 1], outputRange: [0, -12]});
 
+  // flame sits at ~0.39x the day-count cap height, beside the number
+  const flameSize = Math.round(m.type.dayCount.fontSize * 0.312);
+
   return (
     <Screen>
-      <View style={styles.wrap}>
-        {/* 1. header row */}
-        <View style={styles.header}>
-          <Text style={styles.rank}>{current.name.toUpperCase()}</Text>
-          <Icon name="box" size={controls.headerIcon} />
+      <View style={[styles.wrap, {paddingHorizontal: m.gutter}]}>
+        {/* header 6.5% */}
+        <View style={[styles.header, {height: m.band.header}]}>
+          <Text style={[m.type.label, {color: colors.ink}]}>
+            {current.name.toUpperCase()}
+          </Text>
+          <Icon name="box" size={fixed.headerIcon} />
         </View>
 
-        {/* 2. flexible top spacer — 40% of the slack */}
-        <View style={styles.spacerTop} />
+        {/* gap 4% */}
+        <View style={{height: m.band.gapAboveCompanion}} />
 
-        {/* 3. companion — the visual anchor */}
-        <View style={styles.companionBox}>
+        {/* companion band 30% — the visual anchor */}
+        <View style={[styles.centered, {height: m.band.companion}]}>
           <Animated.View style={{transform: [{scale}, {translateY: lift}]}}>
-            <Companion id={equipped} size={COMPANION_SIZE} shadow />
+            <Companion id={equipped} size={m.companionSize} shadow />
           </Animated.View>
         </View>
 
-        {/* 4 + 5. gap 12, then the day-count group */}
-        <View style={styles.countGroup}>
+        {/* gap 1.5% */}
+        <View style={{height: m.band.gapBelowCompanion}} />
+
+        {/* day count group 12% */}
+        <View style={[styles.centered, {height: m.band.countGroup}]}>
           <View style={styles.countRow}>
-            <Text style={styles.count}>{streak}</Text>
-            <Flame size={22} layers={2} />
+            <Text style={[m.type.dayCount, {color: colors.ink}]}>{streak}</Text>
+            <Flame size={flameSize} layers={2} />
           </View>
-          <Text style={styles.countLabel}>Days clean</Text>
+          <Text style={[m.type.label, {color: colors.muted, marginTop: 4}]}>Days clean</Text>
         </View>
 
-        {/* 6. flexible bottom spacer — 60% of the slack */}
-        <View style={styles.spacerBottom} />
+        {/* ---- THE ONE FLEX GAP ---- */}
+        <View style={styles.flexGap} />
 
-        {/* 7. stat row */}
-        <View style={styles.statRow}>
+        {/* stat row 11% */}
+        <View style={[styles.statRow, {height: m.band.statRow, gap: m.statGap}]}>
           <Stat k="Saved" v={`${habit.currencySymbol}${saved}`} />
           <Stat k="Avoided" v={avoided} />
         </View>
 
-        {/* 8 + 9. gap 16, then the hold bar */}
-        <View style={styles.holdWrap}>
-          <HoldButton onComplete={onHoldComplete} held={heldToday} />
-        </View>
+        {/* gap 3% */}
+        <View style={{height: m.band.gap}} />
+
+        {/* hold bar 6.6% */}
+        <HoldButton onComplete={onHoldComplete} held={heldToday} />
+
+        {/* bottom gap 3% above the tab bar (fixed, not flexible) */}
+        <View style={{height: m.band.gap}} />
       </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  // 10. gap 16 to the tab bar
-  wrap: {flex: 1, paddingHorizontal: gutter, paddingBottom: spacing.lg},
-
-  header: {
-    height: 44,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  rank: {...T.label, color: colors.ink},
-
-  spacerTop: {flex: 4},
-  spacerBottom: {flex: 6},
-
-  companionBox: {height: COMPANION_BOX, alignItems: 'center', justifyContent: 'center'},
-
-  countGroup: {alignItems: 'center', marginTop: spacing.md},
-  countRow: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm},
-  count: {...T.display, color: colors.ink},
-  countLabel: {...T.label, color: colors.muted, marginTop: spacing.xs},
-
-  statRow: {flexDirection: 'row', gap: spacing.md},
-  holdWrap: {marginTop: spacing.lg},
+  wrap: {flex: 1},
+  header: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'},
+  centered: {alignItems: 'center', justifyContent: 'center'},
+  countRow: {flexDirection: 'row', alignItems: 'center', gap: 8},
+  flexGap: {flex: 1},
+  statRow: {flexDirection: 'row'},
 });

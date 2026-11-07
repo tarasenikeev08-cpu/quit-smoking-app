@@ -4,7 +4,8 @@ import {useNavigation} from '@react-navigation/native';
 
 import Screen from '@/components/Screen';
 import {Button, Pill} from '@/components/ui';
-import {colors, gutter, spacing, type as T} from '@/theme';
+import {colors} from '@/theme';
+import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
 import {TRIGGERS, Trigger} from '@/lib/journal';
 
@@ -13,6 +14,8 @@ const MOODS = [1, 2, 3, 4, 5];
 
 export default function CheckInScreen() {
   const nav = useNavigation<any>();
+  const m = useMetrics();
+  const T = m.type;
   const logEntry = useStore(s => s.logEntry);
 
   const [craving, setCraving] = useState(3);
@@ -28,37 +31,41 @@ export default function CheckInScreen() {
   };
 
   return (
-    <Screen scroll contentStyle={styles.content}>
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>How was today?</Text>
+    <Screen scroll contentStyle={[styles.content, {paddingHorizontal: m.gutter}]}>
+      <View style={[styles.headerRow, {height: m.band.header}]}>
+        <Text style={[T.h2, {color: colors.ink}]}>How was today?</Text>
         <Pressable onPress={() => nav.navigate('Patterns')} hitSlop={8}>
-          <Text style={styles.skip}>Skip</Text>
+          <Text style={[T.body, {color: colors.muted}]}>Skip</Text>
         </Pressable>
       </View>
-      <Text style={styles.hint}>15 seconds. Builds your pattern.</Text>
+      <Text style={[T.caption, {color: colors.muted}]}>15 seconds. Builds your pattern.</Text>
 
-      <Text style={styles.sectionLabel}>Craving strength</Text>
+      <Text style={[T.label, styles.sectionLabel, {color: colors.muted}]}>Craving strength</Text>
       <View style={styles.cravingRow}>
         {CRAVING_STEPS.map(n => (
           <Pressable key={n} style={styles.cravingHit} onPress={() => setCraving(n)}>
             <View style={[styles.cravingBar, n <= craving ? styles.cravingOn : styles.cravingOff]} />
           </Pressable>
         ))}
-        <Text style={styles.cravingNum}>{craving}</Text>
+        <Text style={[T.body, styles.cravingNum, {color: colors.ink}]}>{craving}</Text>
       </View>
 
-      <Text style={styles.sectionLabel}>Any triggers?</Text>
+      <Text style={[T.label, styles.sectionLabel, {color: colors.muted}]}>Any triggers?</Text>
       <View style={styles.pills}>
         {TRIGGERS.map(t => (
           <Pill key={t} label={t} active={triggers.includes(t)} onPress={() => toggle(t)} />
         ))}
       </View>
 
-      <Text style={styles.sectionLabel}>Mood</Text>
+      <Text style={[T.label, styles.sectionLabel, {color: colors.muted}]}>Mood</Text>
       <View style={styles.moodRow}>
         {MOODS.map(n => (
           <Pressable key={n} onPress={() => setMood(n)} hitSlop={6}>
-            <Text style={[styles.moodDot, n === mood ? styles.moodActive : styles.moodIdle]}>
+            <Text
+              style={[
+                {fontSize: T.statValue.fontSize},
+                n === mood ? styles.moodActive : styles.moodIdle,
+              ]}>
               {n === mood ? '●' : '○'}
             </Text>
           </Pressable>
@@ -72,32 +79,27 @@ export default function CheckInScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: {paddingHorizontal: gutter, paddingTop: spacing.sm, flexGrow: 1},
-  headerRow: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'},
-  title: {...T.h2, color: colors.ink},
-  skip: {...T.body, color: colors.muted},
-  hint: {...T.caption, color: colors.muted, marginTop: spacing.xs},
-
-  sectionLabel: {
-    ...T.label,
-    color: colors.muted,
-    marginTop: spacing.xxl,
-    marginBottom: spacing.md,
+  content: {flexGrow: 1},
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
   },
+  sectionLabel: {marginTop: 24, marginBottom: 12},
 
-  cravingRow: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm},
-  cravingHit: {flex: 1, paddingVertical: spacing.sm},
+  cravingRow: {flexDirection: 'row', alignItems: 'center', gap: 8},
+  cravingHit: {flex: 1, paddingVertical: 8},
   cravingBar: {height: 8, borderRadius: 10},
   cravingOn: {backgroundColor: colors.ink},
   cravingOff: {backgroundColor: colors.border},
-  cravingNum: {...T.body, fontWeight: '500', marginLeft: spacing.sm, color: colors.ink},
+  cravingNum: {fontWeight: '500', marginLeft: 8},
 
-  pills: {flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm},
+  pills: {flexDirection: 'row', flexWrap: 'wrap', gap: 8},
 
-  moodRow: {flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.xs},
-  moodDot: {fontSize: 24},
+  moodRow: {flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4},
   moodActive: {color: colors.ink},
   moodIdle: {color: colors.ink, opacity: 0.3},
 
-  spacer: {flex: 1, minHeight: spacing.xl},
+  // THE ONE FLEX GAP — Save is anchored to the bottom
+  spacer: {flex: 1, minHeight: 20},
 });

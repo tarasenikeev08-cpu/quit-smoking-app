@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {Animated, Easing, LayoutChangeEvent, Pressable, StyleSheet, Text, View} from 'react-native';
-import {colors, controls, type as T} from '@/theme';
+import {colors} from '@/theme';
+import {useMetrics} from '@/theme/metrics';
 
 export const HOLD_DURATION = 1200;
 
@@ -25,6 +26,7 @@ export default function HoldButton({
   idleLabel = 'Hold — still clean',
   heldLabel = 'Still clean',
 }: Props) {
+  const m = useMetrics();
   const progress = useRef(new Animated.Value(held ? 1 : 0)).current;
   const scale = useRef(new Animated.Value(1)).current;
   const [width, setWidth] = useState(0);
@@ -78,7 +80,10 @@ export default function HoldButton({
         onLayout={onLayout}
         accessibilityRole="button"
         accessibilityLabel={label}
-        style={styles.track}>
+        style={[
+          styles.track,
+          {height: m.controls.hold.height, borderRadius: m.controls.hold.radius},
+        ]}>
         {/* ink fill sweeping left -> right */}
         <Animated.View style={[styles.fill, {width: fillWidth}]} />
 
@@ -88,7 +93,7 @@ export default function HoldButton({
           pointerEvents="none"
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants">
-          <Text style={[styles.label, {color: colors.ink}]}>{label}</Text>
+          <Text style={[m.type.button, {color: colors.ink}]}>{label}</Text>
         </View>
 
         {/* inverted label, clipped to the fill so letters flip as it passes */}
@@ -98,7 +103,7 @@ export default function HoldButton({
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants">
           <View style={[styles.labelLayer, {width}]}>
-            <Text style={[styles.label, {color: colors.paper}]}>{label}</Text>
+            <Text style={[m.type.button, {color: colors.paper}]}>{label}</Text>
           </View>
         </Animated.View>
       </Pressable>
@@ -108,8 +113,6 @@ export default function HoldButton({
 
 const styles = StyleSheet.create({
   track: {
-    height: controls.hold.height,
-    borderRadius: controls.hold.radius,
     backgroundColor: colors.pill,
     borderWidth: 1.5,
     borderColor: colors.ink,
@@ -133,5 +136,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   clip: {left: 0, right: undefined, overflow: 'hidden'},
-  label: {...T.button},
 });

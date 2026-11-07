@@ -5,13 +5,16 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {StatusBar} from 'react-native';
 
 import Flame from '@/components/Flame';
-import {colors, controls, gutter, radius, spacing, type as T} from '@/theme';
+import {colors, radius} from '@/theme';
+import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
 import {getOffering, purchase, restore, MockPlan} from '@/services/purchases';
 
 export default function PaywallScreen() {
   const nav = useNavigation<any>();
   const onboarded = useStore(s => s.onboarded);
+  const m = useMetrics();
+  const T = m.type;
   const finishOnboarding = useStore(s => s.finishOnboarding);
 
   const [plan, setPlan] = useState<MockPlan | null>(null);
@@ -43,46 +46,46 @@ export default function PaywallScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" />
-      <View style={styles.wrap}>
+      <View style={[styles.wrap, {paddingHorizontal: m.gutter, paddingTop: m.band.header}]}>
         <View style={styles.flameRow}>
-          <Text style={styles.zero}>0</Text>
+          <Text style={[T.h1, {color: colors.paper}]}>0</Text>
           <Flame size={24} />
         </View>
-        <Text style={styles.headline}>Protect your streak from day one.</Text>
+        <Text style={[T.h2, styles.headline, {color: colors.paper}]}>Protect your streak from day one.</Text>
 
         <View style={styles.planCard}>
           <View style={styles.badge}>
-            <Text style={styles.badgeTxt}>{plan ? plan.discountLabel : '…'}</Text>
+            <Text style={[T.caption, styles.badgeTxt, {color: colors.ink}]}>{plan ? plan.discountLabel : '…'}</Text>
           </View>
           <View>
-            <Text style={styles.planName}>{plan?.title ?? 'First month'}</Text>
-            <Text style={styles.planSub}>{plan?.subtitle ?? 'then $5 / month'}</Text>
+            <Text style={[T.body, {fontWeight: "500", color: colors.paper}]}>{plan?.title ?? 'First month'}</Text>
+            <Text style={[T.caption, {color: colors.muted, marginTop: 4}]}>{plan?.subtitle ?? 'then $5 / month'}</Text>
           </View>
           <View style={styles.priceRow}>
             {plan?.strikePrice ? (
-              <Text style={styles.strike}>{plan.strikePrice}</Text>
+              <Text style={[T.body, styles.strike, {color: colors.mutedOnInk}]}>{plan.strikePrice}</Text>
             ) : null}
-            <Text style={styles.price}>{plan?.price ?? '$3'}</Text>
+            <Text style={[T.statValue, styles.price, {color: colors.paper}]}>{plan?.price ?? '$3'}</Text>
           </View>
         </View>
-        <Text style={styles.finePrint}>Less than one pack. Cancel anytime.</Text>
+        <Text style={[T.caption, styles.finePrint, {color: colors.mutedOnInk}]}>Less than one pack. Cancel anytime.</Text>
 
         <View style={styles.spacer} />
 
-        <Pressable style={styles.cta} onPress={onClaim} disabled={busy || !plan}>
+        <Pressable style={[styles.cta, {height: m.controls.primary.height, borderRadius: m.controls.primary.radius}]} onPress={onClaim} disabled={busy || !plan}>
           {busy ? (
             <ActivityIndicator color={colors.ink} />
           ) : (
-            <Text style={styles.ctaTxt}>{plan?.ctaLabel ?? 'Claim 40% off'}</Text>
+            <Text style={[T.button, {color: colors.ink}]}>{plan?.ctaLabel ?? 'Claim 40% off'}</Text>
           )}
         </Pressable>
 
         <View style={styles.footerLinks}>
           <Pressable onPress={onRestore} hitSlop={10}>
-            <Text style={styles.link}>Restore</Text>
+            <Text style={[T.caption, {color: colors.mutedOnInk}]}>Restore</Text>
           </Pressable>
           <Pressable onPress={proceed} hitSlop={10}>
-            <Text style={styles.link}>Maybe later</Text>
+            <Text style={[T.caption, {color: colors.mutedOnInk}]}>Maybe later</Text>
           </Pressable>
         </View>
       </View>
@@ -92,22 +95,15 @@ export default function PaywallScreen() {
 
 const styles = StyleSheet.create({
   safe: {flex: 1, backgroundColor: colors.ink},
-  wrap: {flex: 1, paddingHorizontal: gutter, paddingTop: spacing.xxl, paddingBottom: spacing.lg},
-  flameRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm},
-  zero: {...T.h1, color: colors.paper},
-  headline: {
-    ...T.h2,
-    textAlign: 'center',
-    color: colors.paper,
-    marginTop: spacing.md,
-    lineHeight: 28,
-  },
+  wrap: {flex: 1, paddingBottom: 16},
+  flameRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8},
+  headline: {textAlign: 'center', marginTop: 12},
   planCard: {
-    marginTop: spacing.xxl,
+    marginTop: 24,
     borderWidth: 1.5,
     borderColor: colors.accent,
     borderRadius: radius.cardSm,
-    padding: spacing.lg,
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -115,28 +111,19 @@ const styles = StyleSheet.create({
   badge: {
     position: 'absolute',
     top: -10,
-    left: spacing.lg,
+    left: 16,
     backgroundColor: colors.accent,
-    borderRadius: controls.chip.radius,
-    paddingHorizontal: spacing.sm,
+    borderRadius: 20,
+    paddingHorizontal: 8,
     paddingVertical: 3,
   },
-  badgeTxt: {color: colors.ink, fontSize: 11, fontWeight: '600', letterSpacing: 1},
-  planName: {...T.body, color: colors.paper, fontWeight: '500'},
-  planSub: {...T.caption, color: colors.muted, marginTop: spacing.xs},
+  badgeTxt: {fontWeight: '600', letterSpacing: 1},
   priceRow: {flexDirection: 'row', alignItems: 'center'},
-  strike: {...T.body, color: colors.mutedOnInk, textDecorationLine: 'line-through'},
-  price: {...T.statValue, color: colors.paper, marginLeft: spacing.sm},
-  finePrint: {...T.caption, color: colors.mutedOnInk, textAlign: 'center', marginTop: spacing.md},
+  strike: {textDecorationLine: 'line-through'},
+  price: {marginLeft: 8},
+  finePrint: {textAlign: 'center', marginTop: 12},
+  // THE ONE FLEX GAP — CTA anchored to the bottom
   spacer: {flex: 1},
-  cta: {
-    backgroundColor: colors.paper,
-    height: controls.primary.height,
-    borderRadius: controls.primary.radius,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctaTxt: {...T.button, color: colors.ink},
-  footerLinks: {flexDirection: 'row', justifyContent: 'center', gap: spacing.xxxl, marginTop: spacing.xl},
-  link: {...T.caption, color: colors.mutedOnInk},
+  cta: {backgroundColor: colors.paper, alignItems: 'center', justifyContent: 'center'},
+  footerLinks: {flexDirection: 'row', justifyContent: 'center', gap: 32, marginTop: 20},
 });

@@ -5,7 +5,8 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 import Screen from '@/components/Screen';
 import {Button} from '@/components/ui';
-import {colors, gutter, radius, spacing, type as T} from '@/theme';
+import {colors, radius} from '@/theme';
+import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
 import {DEFAULT_HABIT} from '@/lib/savings';
 import type {OnboardingParamList} from '@/navigation/types';
@@ -16,6 +17,8 @@ const STEP = 10;
 export default function MathsScreen() {
   const nav = useNavigation<NativeStackNavigationProp<OnboardingParamList>>();
   const setHabit = useStore(s => s.setHabit);
+  const m = useMetrics();
+  const T = m.type;
   const [spend, setSpend] = useState(DEFAULT_HABIT.monthlySpend);
 
   const times = Math.max(1, Math.round(spend / APP_PRICE));
@@ -30,36 +33,36 @@ export default function MathsScreen() {
 
   return (
     <Screen>
-      <View style={styles.wrap}>
-        <Text style={styles.headline}>
+      <View style={[styles.wrap, {paddingHorizontal: m.gutter, paddingTop: m.band.header}]}>
+        <Text style={[T.h2, styles.headline, {color: colors.ink}]}>
           You spend about{' '}
           <Text style={styles.underline}>${spend}</Text> a month on cigarettes.
         </Text>
 
         <View style={styles.stepper}>
           <Pressable
-            style={styles.stepBtn}
+            style={[styles.stepBtn, {height: m.controls.chip.height * 1.4, width: m.controls.chip.height * 1.4, borderRadius: m.controls.chip.height * 0.7}]}
             onPress={() => setSpend(s => Math.max(STEP, s - STEP))}>
-            <Text style={styles.stepTxt}>−</Text>
+            <Text style={[T.h2, {color: colors.ink}]}>−</Text>
           </Pressable>
-          <Text style={styles.stepVal}>${spend}/mo</Text>
-          <Pressable style={styles.stepBtn} onPress={() => setSpend(s => s + STEP)}>
-            <Text style={styles.stepTxt}>+</Text>
+          <Text style={[T.body, {fontWeight: "500", color: colors.ink}]}>${spend}/mo</Text>
+          <Pressable style={[styles.stepBtn, {height: m.controls.chip.height * 1.4, width: m.controls.chip.height * 1.4, borderRadius: m.controls.chip.height * 0.7}]} onPress={() => setSpend(s => s + STEP)}>
+            <Text style={[T.h2, {color: colors.ink}]}>+</Text>
           </Pressable>
         </View>
 
-        <Text style={styles.cap}>Cigarettes / mo</Text>
+        <Text style={[T.label, styles.cap, {color: colors.muted}]}>Cigarettes / mo</Text>
         <View style={[styles.barDark, {width: bigW}]}>
-          <Text style={styles.barDarkTxt}>${spend}</Text>
+          <Text style={[T.body, {fontWeight: "500", color: colors.paper}]}>${spend}</Text>
         </View>
 
-        <Text style={styles.cap}>This app / mo</Text>
+        <Text style={[T.label, styles.cap, {color: colors.muted}]}>This app / mo</Text>
         <View style={styles.row}>
           <View style={[styles.barAccent, {width: `${smallPct}%`}]} />
-          <Text style={styles.barAccentTxt}>${APP_PRICE}</Text>
+          <Text style={[T.body, {fontWeight: "500", color: colors.ink}]}>${APP_PRICE}</Text>
         </View>
 
-        <Text style={styles.footnote}>
+        <Text style={[T.body, styles.footnote, {color: colors.ink}]}>
           Quitting pays for the app <Text style={styles.bold}>{times} times over</Text>.
         </Text>
 
@@ -71,8 +74,8 @@ export default function MathsScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrap: {flex: 1, paddingHorizontal: gutter, paddingTop: spacing.xl, paddingBottom: spacing.xxl},
-  headline: {...T.h2, lineHeight: 30, color: colors.ink, marginBottom: spacing.xxl},
+  wrap: {flex: 1, paddingBottom: 24},
+  headline: {marginBottom: 24},
   underline: {borderBottomWidth: 2, borderColor: colors.ink},
   stepper: {
     flexDirection: 'row',
@@ -82,40 +85,25 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: radius.cardSm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
-    marginBottom: spacing.xxl,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    marginBottom: 24,
   },
-  stepBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepTxt: {fontSize: 24, color: colors.ink, lineHeight: 26},
-  stepVal: {...T.body, fontWeight: '500', color: colors.ink},
-  cap: {...T.label, color: colors.muted, marginBottom: spacing.sm},
+  stepBtn: {backgroundColor: colors.pill, alignItems: 'center', justifyContent: 'center'},
+  cap: {marginBottom: 8},
   barDark: {
     height: 36,
     backgroundColor: colors.ink,
     borderRadius: 8,
     alignItems: 'flex-end',
     justifyContent: 'center',
-    paddingRight: spacing.md,
-    marginBottom: spacing.xl,
+    paddingRight: 12,
+    marginBottom: 20,
   },
-  barDarkTxt: {color: colors.paper, ...T.body, fontWeight: '500'},
-  row: {flexDirection: 'row', alignItems: 'center', gap: spacing.md},
+  row: {flexDirection: 'row', alignItems: 'center', gap: 12},
   barAccent: {height: 36, backgroundColor: colors.accent, borderRadius: 8, minWidth: 14},
-  barAccentTxt: {...T.body, fontWeight: '500', color: colors.ink},
-  footnote: {
-    ...T.body,
-    textAlign: 'center',
-    marginTop: spacing.xxl,
-    color: colors.ink,
-  },
+  footnote: {textAlign: 'center', marginTop: 24},
   bold: {fontWeight: '700'},
+  // THE ONE FLEX GAP — Continue anchored to the bottom
   spacer: {flex: 1},
 });

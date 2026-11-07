@@ -4,13 +4,16 @@ import {View, Text, StyleSheet, Pressable} from 'react-native';
 import Screen from '@/components/Screen';
 import Companion from '@/components/Companion';
 import Icon from '@/components/Icon';
-import {colors, gutter, radius, spacing, type as T} from '@/theme';
+import {colors, radius} from '@/theme';
+import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
 import {useUnlocked, useRank} from '@/store/selectors';
 import {COMPANIONS} from '@/lib/companions';
 
 export default function CollectionScreen() {
   const unlocked = useUnlocked();
+  const m = useMetrics();
+  const T = m.type;
   const equipped = useStore(s => s.equipped);
   const equip = useStore(s => s.equip);
   const {next, daysToNext} = useRank();
@@ -19,17 +22,17 @@ export default function CollectionScreen() {
   const equippedMeta = COMPANIONS.find(c => c.id === equipped) ?? COMPANIONS[0];
 
   return (
-    <Screen scroll contentStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.kicker}>Collection</Text>
-        <Text style={styles.count}>{unlockedCount} of {COMPANIONS.length} unlocked</Text>
+    <Screen scroll contentStyle={[styles.content, {paddingHorizontal: m.gutter}]}>
+      <View style={[styles.header, {height: m.band.header}]}>
+        <Text style={[T.label, {color: colors.muted}]}>Collection</Text>
+        <Text style={[T.h2, {color: colors.ink}]}>{unlockedCount} of {COMPANIONS.length} unlocked</Text>
       </View>
 
       <View style={styles.equipCard}>
         <Companion id={equippedMeta.id} size={40} />
         <View style={styles.equipInfo}>
-          <Text style={styles.equipName}>{equippedMeta.name}</Text>
-          <Text style={styles.equipSub}>Equipped</Text>
+          <Text style={[T.body, {fontWeight: "500", color: colors.ink}]}>{equippedMeta.name}</Text>
+          <Text style={[T.caption, {color: colors.muted}]}>Equipped</Text>
         </View>
         <Icon name="check" size={18} />
       </View>
@@ -55,19 +58,19 @@ export default function CollectionScreen() {
               {isUnlocked ? (
                 <>
                   <Companion id={c.id} size={34} face={false} />
-                  <Text style={styles.cellName}>{c.name}</Text>
+                  <Text style={[T.caption, {color: colors.ink, marginTop: 4}]}>{c.name}</Text>
                 </>
               ) : isNext ? (
                 <>
                   <Companion id={c.id} size={34} face={false} locked />
-                  <Text style={styles.cellNextTxt}>
+                  <Text style={[T.caption, styles.cellNextTxt, {color: colors.ink}]}>
                     {c.rankName} · {daysToNext}d
                   </Text>
                 </>
               ) : (
                 <>
                   <Icon name="lock" size={20} color={colors.frame} />
-                  <Text style={styles.cellLockedTxt}>{c.name}</Text>
+                  <Text style={[T.caption, {color: colors.frame, marginTop: 6}]}>{c.name}</Text>
                 </>
               )}
             </Pressable>
@@ -75,7 +78,8 @@ export default function CollectionScreen() {
         })}
       </View>
 
-      <Text style={styles.footnote}>Tap an unlocked companion to equip it.</Text>
+      <View style={styles.flexGap} />
+      <Text style={[T.caption, styles.footnote, {color: colors.muted}]}>Tap an unlocked companion to equip it.</Text>
     </Screen>
   );
 }
@@ -83,39 +87,30 @@ export default function CollectionScreen() {
 const COL_GAP = 12;
 
 const styles = StyleSheet.create({
-  content: {paddingHorizontal: gutter, paddingTop: spacing.sm},
-  header: {alignItems: 'center'},
-  kicker: {...T.label, color: colors.muted},
-  count: {...T.h2, color: colors.ink, marginTop: spacing.xs},
+  content: {flexGrow: 1},
+  header: {alignItems: 'center', justifyContent: 'flex-end'},
 
   equipCard: {
-    marginTop: spacing.lg,
+    marginTop: 16,
     borderWidth: 1.5,
     borderColor: colors.ink,
     borderRadius: radius.card,
-    padding: spacing.lg,
+    padding: 16,
     backgroundColor: colors.card,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.lg,
+    gap: 16,
   },
   equipInfo: {flex: 1},
-  equipName: {...T.body, fontWeight: '500', color: colors.ink},
-  equipSub: {...T.caption, color: colors.muted},
 
-  grid: {
-    marginTop: spacing.lg,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: COL_GAP,
-  },
+  grid: {marginTop: 16, flexDirection: 'row', flexWrap: 'wrap', gap: COL_GAP},
   cell: {
     flexBasis: '30%',
     flexGrow: 1,
     borderWidth: 1.5,
     borderRadius: radius.cardSm,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     alignItems: 'center',
     minHeight: 88,
     justifyContent: 'center',
@@ -124,16 +119,9 @@ const styles = StyleSheet.create({
   cellEquipped: {borderColor: colors.ink, backgroundColor: colors.soft},
   cellNext: {borderColor: colors.ink, borderStyle: 'dashed'},
   cellLocked: {borderColor: colors.hair},
-  cellName: {...T.caption, fontSize: 11, marginTop: spacing.xs, color: colors.ink},
-  cellNextTxt: {
-    ...T.caption,
-    fontSize: 11,
-    marginTop: spacing.xs,
-    fontWeight: '500',
-    color: colors.ink,
-    textAlign: 'center',
-  },
-  cellLockedTxt: {...T.caption, fontSize: 11, marginTop: spacing.sm, color: colors.frame},
+  cellNextTxt: {marginTop: 4, fontWeight: '500', textAlign: 'center'},
 
-  footnote: {...T.caption, color: colors.muted, textAlign: 'center', marginTop: spacing.xxl},
+  // THE ONE FLEX GAP — footnote anchored to the bottom
+  flexGap: {flex: 1, minHeight: 16},
+  footnote: {textAlign: 'center', marginTop: 16, paddingBottom: 8},
 });

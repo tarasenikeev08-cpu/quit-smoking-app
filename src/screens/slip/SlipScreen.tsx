@@ -6,13 +6,16 @@ import Screen from '@/components/Screen';
 import Flame from '@/components/Flame';
 import Icon from '@/components/Icon';
 import {Button} from '@/components/ui';
-import {colors, controls, gutter, radius, spacing, type as T} from '@/theme';
+import {colors, radius} from '@/theme';
+import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
 import {useStreakDays, useSavings} from '@/store/selectors';
 
 export default function SlipScreen() {
   const nav = useNavigation<any>();
   const streak = useStreakDays();
+  const m = useMetrics();
+  const T = m.type;
   const {saved, habit} = useSavings();
   const restoresLeft = useStore(s => s.streak.restoresLeft);
   const useRestore = useStore(s => s.useRestore);
@@ -31,22 +34,22 @@ export default function SlipScreen() {
 
   return (
     <Screen>
-      <View style={styles.wrap}>
-        <Text style={styles.title}>One slip isn’t a reset.</Text>
+      <View style={[styles.wrap, {paddingHorizontal: m.gutter}]}>
+        <Text style={[T.h2, styles.title, {color: colors.ink}]}>One slip isn’t a reset.</Text>
 
         <View style={styles.flame}>
           <Flame size={54} layers={2} cold />
         </View>
-        <Text style={styles.atRisk}>{streak}-day streak at risk</Text>
+        <Text style={[T.caption, styles.atRisk, {color: colors.muted}]}>{streak}-day streak at risk</Text>
 
         <View style={styles.chips}>
-          <View style={styles.chip}>
+          <View style={[styles.chip, {height: m.controls.chip.height, borderRadius: m.controls.chip.radius}]}>
             <Icon name="trophy" size={12} />
-            <Text style={styles.chipTxt}>Rank safe</Text>
+            <Text style={[T.caption, {color: colors.ink}]}>Rank safe</Text>
           </View>
-          <View style={styles.chip}>
+          <View style={[styles.chip, {height: m.controls.chip.height, borderRadius: m.controls.chip.radius}]}>
             <Icon name="coins" size={12} />
-            <Text style={styles.chipTxt}>
+            <Text style={[T.caption, {color: colors.ink}]}>
               {habit.currencySymbol}
               {saved} saved
             </Text>
@@ -55,11 +58,11 @@ export default function SlipScreen() {
 
         <View style={[styles.restoreCard, !canRestore && styles.restoreDisabled]}>
           <View style={styles.restoreInfo}>
-            <Text style={styles.restoreTitle}>Use a restore</Text>
-            <Text style={styles.restoreSub}>Keep your {streak}-day flame</Text>
+            <Text style={[T.body, {fontWeight: "500", color: colors.ink}]}>Use a restore</Text>
+            <Text style={[T.caption, {color: colors.muted, marginTop: 4}]}>Keep your {streak}-day flame</Text>
           </View>
           <View style={styles.restoreTag}>
-            <Text style={styles.restoreTagTxt}>{restoresLeft} free left</Text>
+            <Text style={[T.caption, {color: colors.ink}]}>{restoresLeft} free left</Text>
           </View>
         </View>
 
@@ -72,7 +75,7 @@ export default function SlipScreen() {
           style={styles.cta}
         />
         <Pressable onPress={onStartOver} hitSlop={8} style={styles.startOver}>
-          <Text style={styles.startOverTxt}>Start fresh at Day 1</Text>
+          <Text style={[T.caption, {color: colors.muted}]}>Start fresh at Day 1</Text>
         </Pressable>
       </View>
     </Screen>
@@ -80,28 +83,25 @@ export default function SlipScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrap: {flex: 1, paddingHorizontal: gutter, paddingTop: spacing.sm, paddingBottom: spacing.lg},
-  title: {...T.h2, textAlign: 'center', lineHeight: 28, color: colors.ink},
-  flame: {alignItems: 'center', paddingTop: spacing.lg, paddingBottom: spacing.xs},
-  atRisk: {...T.caption, textAlign: 'center', color: colors.muted},
-  chips: {flexDirection: 'row', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.lg},
+  wrap: {flex: 1, paddingTop: 8, paddingBottom: 16},
+  title: {textAlign: 'center'},
+  flame: {alignItems: 'center', paddingTop: 16, paddingBottom: 4},
+  atRisk: {textAlign: 'center'},
+  chips: {flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 16},
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    height: controls.chip.height,
+    gap: 8,
     borderWidth: 1.5,
     borderColor: colors.border,
-    borderRadius: controls.chip.radius,
     paddingHorizontal: 14,
   },
-  chipTxt: {fontSize: 11, fontWeight: '500', color: colors.ink},
   restoreCard: {
-    marginTop: spacing.lg,
+    marginTop: 16,
     borderWidth: 1.5,
     borderColor: colors.ink,
     borderRadius: radius.card,
-    padding: spacing.lg,
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -109,18 +109,15 @@ const styles = StyleSheet.create({
   },
   restoreDisabled: {opacity: 0.45},
   restoreInfo: {flex: 1},
-  restoreTitle: {...T.body, fontWeight: '500', color: colors.ink},
-  restoreSub: {...T.caption, color: colors.muted, marginTop: spacing.xs},
   restoreTag: {
     borderWidth: 1.5,
     borderColor: colors.ink,
-    borderRadius: controls.chip.radius,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
   },
-  restoreTagTxt: {...T.caption, color: colors.ink},
-  spacer: {flex: 1, minHeight: spacing.xl},
-  cta: {marginBottom: spacing.md},
-  startOver: {alignItems: 'center', paddingBottom: spacing.xs},
-  startOverTxt: {...T.caption, color: colors.muted},
+  // THE ONE FLEX GAP — CTA anchored to the bottom
+  spacer: {flex: 1, minHeight: 20},
+  cta: {marginBottom: 12},
+  startOver: {alignItems: 'center', paddingBottom: 4},
 });
