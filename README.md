@@ -17,6 +17,12 @@ npm install
 npm run web
 ```
 
+> `npm run web` first checks every dependency in `package.json` is actually
+> installed, and runs `npm install` for you if anything is missing — so after
+> pulling commits that add a package, the web build doesn't fail with
+> "Module not found: Can't resolve '…'". (`scripts/ensure-deps.js`)
+
+
 Then open **http://localhost:5173** in Chrome. This runs the exact same screens,
 navigation, and logic via **react-native-web** (webpack dev server, hot reload).
 Everything is usable: onboard, build a streak, check in, earn ranks, unlock and
