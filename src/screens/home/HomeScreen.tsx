@@ -1,5 +1,6 @@
-import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {AppState, Pressable, StyleSheet, Text, View} from 'react-native';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -39,9 +40,21 @@ import {WakeProvider, useWakeEngine} from '@/anim/wake';
  * warms the background, revives the companion and lights the flame as one
  * continuous event.
  */
+/** Focused AND foregrounded — the only time Home's idle animation should run. */
+function useScreenActive(): boolean {
+  const focused = useIsFocused();
+  const [foreground, setForeground] = useState(AppState.currentState !== 'background');
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', s => setForeground(s === 'active'));
+    return () => sub.remove();
+  }, []);
+  return focused && foreground;
+}
+
 export default function HomeScreen() {
   const heldToday = useHeldToday();
-  const engine = useWakeEngine(heldToday);
+  const active = useScreenActive();
+  const engine = useWakeEngine(heldToday, active);
 
   return (
     <WakeProvider engine={engine}>
@@ -56,6 +69,7 @@ function HomeContent() {
   const {saved, avoided, habit} = useSavings();
   const equipped = useStore(s => s.equipped);
   const markHeld = useStore(s => s.markHeld);
+  const nav = useNavigation<any>();
   const m = useMetrics();
 
   // The streak number kicks with a spring overshoot the moment the hold lands,
@@ -91,7 +105,14 @@ function HomeContent() {
           <Text style={[m.type.label, {color: colors.ink}]}>
             {current.name.toUpperCase()}
           </Text>
-          <Icon name="box" size={fixed.headerIcon} />
+          {/* the box was decorative but read as a button — make it one */}
+          <Pressable
+            onPress={() => nav.navigate('Collection')}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Open collection">
+            <Icon name="box" size={fixed.headerIcon} />
+          </Pressable>
         </View>
 
         {/* gap 4% */}

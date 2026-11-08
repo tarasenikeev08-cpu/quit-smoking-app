@@ -38,6 +38,12 @@ export type WakeEngine = {
   burst: SharedValue<number>;
   /** true once today's hold is banked — the bright state persists all day */
   awake: boolean;
+  /**
+   * true while the screen is focused and the app is in the foreground. The
+   * idle loops (breathing, flicker, halo, drifting embers) only run while this
+   * holds, so a Home screen sitting behind another tab costs nothing.
+   */
+  active: boolean;
   start: () => void;
   abandon: () => void;
   complete: () => void;
@@ -45,7 +51,7 @@ export type WakeEngine = {
 
 const WakeContext = createContext<WakeEngine | null>(null);
 
-export function useWakeEngine(awake: boolean): WakeEngine {
+export function useWakeEngine(awake: boolean, active: boolean): WakeEngine {
   const wake = useSharedValue(awake ? 1 : 0);
   const charge = useSharedValue(awake ? 1 : 0);
   const pressing = useSharedValue(0);
@@ -73,6 +79,7 @@ export function useWakeEngine(awake: boolean): WakeEngine {
       celebrate,
       burst,
       awake,
+      active,
 
       /** finger down: start charging, and let the wake lead the bar slightly */
       start() {
@@ -105,7 +112,7 @@ export function useWakeEngine(awake: boolean): WakeEngine {
         burst.value = withTiming(1, {duration: 1150, easing: EASE_LINEAR});
       },
     }),
-    [wake, charge, pressing, celebrate, burst, awake],
+    [wake, charge, pressing, celebrate, burst, awake, active],
   );
 }
 

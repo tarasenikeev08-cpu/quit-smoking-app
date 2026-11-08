@@ -71,7 +71,16 @@ supabase/schema.sql draft schema + RLS for the eventual Supabase wiring
 ```
 
 State is **local-first**: the Zustand store is the source of truth and persists
-to the device. A backend only mirrors it later.
+to the device. A backend only mirrors it later. Persisted state is validated
+field by field on load (`mergePersisted` in `src/store/index.ts`), so a partial
+or older saved state falls back to defaults instead of rendering `NaN`.
+
+**The day clock.** Everything date-based (streak count, "held today") derives
+from the store's runtime-only `today`, which `src/lib/clock.ts` advances just
+after local midnight and whenever the app returns to the foreground. Selectors
+must read `today`, never call `dayjs()` themselves — a selector only re-runs on
+a store change, so one reading the wall clock would freeze on the day it last
+rendered.
 
 ### The daily hold (`src/anim/`)
 

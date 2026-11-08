@@ -13,6 +13,7 @@ import type {OnboardingParamList} from '@/navigation/types';
 
 const APP_PRICE = 5;
 const STEP = 10;
+const MAX_SPEND = 2000;
 
 /**
  * ONBOARDING — THE MATHS, per Ember_Proportions.md.
@@ -105,7 +106,7 @@ export default function MathsScreen() {
             accessibilityRole="button"
             accessibilityLabel="Spend more"
             style={[styles.stepBtn, {height: stepSize, width: stepSize, borderRadius: stepSize / 2}]}
-            onPress={() => setSpend(s => s + STEP)}>
+            onPress={() => setSpend(s => Math.min(MAX_SPEND, s + STEP))}>
             <Text style={[T.h2, {color: colors.ink}]}>+</Text>
           </Pressable>
         </View>
@@ -157,7 +158,9 @@ const styles = StyleSheet.create({
   wrap: {flex: 1},
   headlineBand: {justifyContent: 'center'},
   headline: {},
-  underline: {borderBottomWidth: 2, borderColor: colors.ink},
+  // nested Text ignores borders on iOS/Android, so a border "underline" only
+  // ever showed on web; a text decoration renders everywhere
+  underline: {textDecorationLine: 'underline', textDecorationColor: colors.ink},
 
   stepper: {
     flexDirection: 'row',

@@ -13,7 +13,8 @@ export type IconName =
   | 'shieldCheck'
   | 'coins'
   | 'flame'
-  | 'chevronRight';
+  | 'chevronRight'
+  | 'close';
 
 type Props = {name: IconName; size?: number; color?: string; filled?: boolean};
 
@@ -96,6 +97,8 @@ function render(name: IconName, p: object, color: string) {
       );
     case 'chevronRight':
       return <Path d="M9 6l6 6-6 6" {...p} />;
+    case 'close':
+      return <Path d="M6 6l12 12M18 6L6 18" {...p} />;
     default:
       return null;
   }

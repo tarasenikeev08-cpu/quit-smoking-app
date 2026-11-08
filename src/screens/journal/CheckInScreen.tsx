@@ -33,6 +33,11 @@ export default function CheckInScreen() {
 
   const save = () => {
     logEntry({craving, triggers, mood});
+    // Clear the form: Patterns is pushed on top of this screen, so coming back
+    // would otherwise show the entry just saved, ready to be saved twice.
+    setCraving(3);
+    setTriggers([]);
+    setMood(3);
     nav.navigate('Patterns');
   };
 

@@ -2,6 +2,7 @@ import React, {useMemo} from 'react';
 import {StyleSheet, View} from 'react-native';
 import Svg, {Circle, Ellipse, Path} from 'react-native-svg';
 import Animated, {
+  cancelAnimation,
   interpolate,
   useAnimatedStyle,
   useSharedValue,
@@ -29,18 +30,25 @@ import {useWake} from '@/anim/wake';
  * thing stays on the compositor and the reference artwork is never redrawn.
  */
 export default function CompanionWake({id, size}: {id: CompanionId; size: number}) {
-  const {wake, celebrate} = useWake();
+  const {wake, celebrate, active} = useWake();
   const face = useMemo(() => faceGeom(id, size), [id, size]);
 
   // Two independent loops: the slow dormant breath, and a faster awake idle.
   const breath = useSharedValue(0);
   const zDrift = useSharedValue(0);
+  // Loops only run while the screen is visible; they pick up again on return.
   React.useEffect(() => {
+    if (!active) {
+      cancelAnimation(breath);
+      cancelAnimation(zDrift);
+      return;
+    }
     breath.value = withRepeat(
       withTiming(1, {duration: BREATH_PERIOD, easing: EASE_IN_OUT}),
       -1,
       true,
     );
+    zDrift.value = 0;
     zDrift.value = withRepeat(
       withSequence(
         withTiming(1, {duration: 2400, easing: EASE_IN_OUT}),
@@ -49,7 +57,11 @@ export default function CompanionWake({id, size}: {id: CompanionId; size: number
       -1,
       false,
     );
-  }, [breath, zDrift]);
+    return () => {
+      cancelAnimation(breath);
+      cancelAnimation(zDrift);
+    };
+  }, [active, breath, zDrift]);
 
   /** Breath amplitude fades as it wakes: deep sleep -> alert stillness. */
   const body = useAnimatedStyle(() => {
@@ -117,6 +129,10 @@ export default function CompanionWake({id, size}: {id: CompanionId; size: number
   /** A faint "z" drifting up and fading — only while genuinely asleep. */
   const zStyle = useAnimatedStyle(() => {
     const asleep = interpolate(wake.value, [0, 0.35], [1, 0], Extrapolation.CLAMP);
+    // awake: invisible, so return a constant and stop pushing frame updates
+    if (asleep <= 0) {
+      return {opacity: 0, transform: [{translateY: 0}, {translateX: 0}, {scale: 1}]};
+    }
     const t = zDrift.value;
     return {
       opacity: asleep * interpolate(t, [0, 0.15, 0.7, 1], [0, 0.5, 0.32, 0], Extrapolation.CLAMP),

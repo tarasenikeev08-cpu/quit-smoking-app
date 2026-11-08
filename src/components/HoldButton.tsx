@@ -1,7 +1,15 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {LayoutChangeEvent, Pressable, StyleSheet, Text, View} from 'react-native';
+import {
+  AccessibilityActionEvent,
+  LayoutChangeEvent,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import Svg, {Defs, LinearGradient, RadialGradient, Rect, Stop} from 'react-native-svg';
 import Animated, {
+  cancelAnimation,
   interpolate,
   useAnimatedStyle,
   useSharedValue,
@@ -27,6 +35,8 @@ type Props = {
 /** Haptic ticks while charging — accelerating, so the press feels like it's winding up. */
 const TICKS = [170, 380, 610, 810, 970, 1090];
 
+const A11Y_ACTIONS = [{name: 'activate' as const}];
+
 /**
  * Press-and-hold to wake the companion.
  *
@@ -37,21 +47,34 @@ const TICKS = [170, 380, 610, 810, 970, 1090];
  * while dormant and untouched — a slow warm halo quietly inviting the press.
  *
  * Releasing early reverses everything and logs nothing.
+ *
+ * Everything here animates with transforms only — no per-frame width changes —
+ * so the sweep never triggers layout on either platform.
  */
 export default function HoldButton({onComplete, companionName}: Props) {
   const m = useMetrics();
-  const {wake, charge, pressing, celebrate, awake, start, abandon, complete} = useWake();
+  const {wake, charge, pressing, celebrate, awake, active, start, abandon, complete} = useWake();
 
-  const [width, setWidth] = useState(0);
+  // Inner width of the bar (inside its border). The fill, the inverted label
+  // and the burning edge are all positioned against this one measurement, so
+  // the two label layers line up to the pixel.
+  const [innerW, setInnerW] = useState(0);
+  const w = useSharedValue(0);
+
   const done = useRef(awake);
   const finishTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tickTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  // slow breathing halo, running whenever the bar is inviting a press
+  // slow breathing halo — only runs while the bar is actually inviting a press
   const halo = useSharedValue(0);
   useEffect(() => {
-    halo.value = withRepeat(withTiming(1, {duration: 1900, easing: EASE_IN_OUT}), -1, true);
-  }, [halo]);
+    if (active && !awake) {
+      halo.value = withRepeat(withTiming(1, {duration: 1900, easing: EASE_IN_OUT}), -1, true);
+    } else {
+      cancelAnimation(halo);
+    }
+    return () => cancelAnimation(halo);
+  }, [halo, active, awake]);
 
   useEffect(() => {
     done.current = awake;
@@ -66,9 +89,31 @@ export default function HoldButton({onComplete, companionName}: Props) {
 
   useEffect(() => clearTimers, [clearTimers]);
 
-  const onLayout = useCallback((e: LayoutChangeEvent) => {
-    setWidth(e.nativeEvent.layout.width);
-  }, []);
+  // If the screen loses focus mid-hold (a notification, a tab switch), treat
+  // it as a release rather than letting the timer complete off-screen.
+  useEffect(() => {
+    if (!active && finishTimer.current) {
+      clearTimers();
+      abandon();
+    }
+  }, [active, clearTimers, abandon]);
+
+  const onLabelLayout = useCallback(
+    (e: LayoutChangeEvent) => {
+      const width = e.nativeEvent.layout.width;
+      setInnerW(width);
+      w.value = width;
+    },
+    [w],
+  );
+
+  const finish = useCallback(() => {
+    done.current = true;
+    clearTimers();
+    complete();
+    haptic('success');
+    onComplete();
+  }, [clearTimers, complete, onComplete]);
 
   const pressIn = () => {
     if (done.current) return;
@@ -77,19 +122,22 @@ export default function HoldButton({onComplete, companionName}: Props) {
     haptic('light');
     // accelerating ticks as the charge builds
     tickTimers.current = TICKS.map(at => setTimeout(() => haptic('tick'), at));
-    finishTimer.current = setTimeout(() => {
-      done.current = true;
-      clearTimers();
-      complete();
-      haptic('success');
-      onComplete();
-    }, HOLD_DURATION);
+    finishTimer.current = setTimeout(finish, HOLD_DURATION);
   };
 
   const pressOut = () => {
     if (done.current) return;
     clearTimers();
     abandon();
+  };
+
+  // Screen readers activate with a double-tap, which is a press, not a hold —
+  // so a VoiceOver/TalkBack user could never complete it. Give them a direct
+  // action that runs the same completion.
+  const onAccessibilityAction = (e: AccessibilityActionEvent) => {
+    if (e.nativeEvent.actionName !== 'activate' || done.current) return;
+    clearTimers();
+    finish();
   };
 
   const label = awake ? `${companionName} is awake` : `Hold to wake ${companionName}`;
@@ -108,23 +156,35 @@ export default function HoldButton({onComplete, companionName}: Props) {
     transform: [{scale: 1 - pressing.value * 0.02 + celebrate.value * 0.035}],
   }));
 
-  /** Ink fill sweeping left to right, exactly tracking hold progress. */
+  /**
+   * Ink fill: a full-width slab slid in from the left (the track clips it),
+   * rather than a width animated every frame.
+   */
   const fillStyle = useAnimatedStyle(() => ({
-    width: `${charge.value * 100}%`,
+    opacity: w.value > 0 ? 1 : 0,
+    transform: [{translateX: (charge.value - 1) * w.value}],
   }));
 
   /** A hot edge burning along the fill boundary while charging. */
   const edgeStyle = useAnimatedStyle(() => {
-    const live = pressing.value * (charge.value > 0.002 && charge.value < 0.999 ? 1 : 0);
+    const c = charge.value;
+    const live = pressing.value * (c > 0.002 && c < 0.999 ? 1 : 0);
     return {
-      opacity: live * interpolate(halo.value, [0, 1], [0.75, 1]),
-      transform: [{translateX: charge.value * width}, {scaleY: 1 + halo.value * 0.08}],
+      opacity: live * interpolate(halo.value, [0, 1], [0.8, 1]),
+      transform: [{translateX: c * w.value}],
     };
   });
 
-  /** Paper-coloured copy of the label, revealed by a clip tracking the fill. */
-  const clipStyle = useAnimatedStyle(() => ({
-    width: `${charge.value * 100}%`,
+  /**
+   * Inverted label: a window that slides in with the fill, holding a copy of
+   * the label slid the opposite way — so the text stays put while the window
+   * reveals it. Two transforms, no clipping width animated per frame.
+   */
+  const windowStyle = useAnimatedStyle(() => ({
+    transform: [{translateX: (charge.value - 1) * w.value}],
+  }));
+  const windowTextStyle = useAnimatedStyle(() => ({
+    transform: [{translateX: (1 - charge.value) * w.value}],
   }));
 
   return (
@@ -148,10 +208,12 @@ export default function HoldButton({onComplete, companionName}: Props) {
         <Pressable
           onPressIn={pressIn}
           onPressOut={pressOut}
-          onLayout={onLayout}
           accessibilityRole="button"
           accessibilityLabel={label}
-          accessibilityHint={awake ? undefined : 'Press and hold for just over a second'}
+          accessibilityHint={awake ? undefined : 'Logs today as a clean day'}
+          accessibilityState={{disabled: awake}}
+          accessibilityActions={A11Y_ACTIONS}
+          onAccessibilityAction={onAccessibilityAction}
           // react-native-web: data-* attributes land on the DOM node, so the
           // stylesheet's [data-hold-target="true"] rule applies touch-action:none.
           // (RN's Pressable type has no dataSet prop; RN Web reads it at runtime.)
@@ -180,9 +242,10 @@ export default function HoldButton({onComplete, companionName}: Props) {
             </Svg>
           </Animated.View>
 
-          {/* base label (ink on pill) */}
+          {/* base label (ink on pill) — also the width measurement */}
           <View
             style={styles.labelLayer}
+            onLayout={onLabelLayout}
             pointerEvents="none"
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants">
@@ -191,19 +254,19 @@ export default function HoldButton({onComplete, companionName}: Props) {
             </Text>
           </View>
 
-          {/* inverted label, clipped to the fill so letters flip as it passes */}
+          {/* inverted label (paper on ink), revealed by the sliding window */}
           <Animated.View
-            style={[styles.labelLayer, styles.clip, clipStyle]}
+            style={[styles.window, {width: innerW}, windowStyle]}
             pointerEvents="none"
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants">
-            <View style={[styles.labelLayer, {width}]}>
+            <Animated.View style={[styles.labelLayer, {width: innerW}, windowTextStyle]}>
               <Text
                 selectable={false}
                 style={[m.type.button, styles.noSelect, {color: colors.paper}]}>
                 {label}
               </Text>
-            </View>
+            </Animated.View>
           </Animated.View>
         </Pressable>
       </Animated.View>
@@ -238,6 +301,7 @@ const styles = StyleSheet.create({
   fill: {
     position: 'absolute',
     left: 0,
+    right: 0,
     top: 0,
     bottom: 0,
     backgroundColor: colors.ink,
@@ -258,5 +322,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  clip: {left: 0, right: undefined, overflow: 'hidden'},
+  window: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    overflow: 'hidden',
+  },
 });

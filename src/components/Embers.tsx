@@ -1,6 +1,7 @@
 import React, {useMemo} from 'react';
 import {StyleSheet, View} from 'react-native';
 import Animated, {
+  cancelAnimation,
   Extrapolation,
   interpolate,
   useAnimatedStyle,
@@ -64,14 +65,20 @@ function makeSparks(count: number, spread: number): Spark[] {
  * of the flame so a small flame can still throw a big burst.
  */
 export default function Embers({size, spread}: {size: number; spread: number}) {
-  const {wake, burst, pressing} = useWake();
+  const {wake, burst, pressing, active} = useWake();
   const sparks = useMemo(() => makeSparks(EMBER_COUNT, spread), [spread]);
 
   // one shared clock for the looping drift
   const drift = useSharedValue(0);
   React.useEffect(() => {
+    if (!active) {
+      cancelAnimation(drift);
+      return;
+    }
+    drift.value = 0;
     drift.value = withRepeat(withTiming(1, {duration: 1800, easing: EASE_LINEAR}), -1, false);
-  }, [drift]);
+    return () => cancelAnimation(drift);
+  }, [active, drift]);
 
   return (
     <View style={styles.field} pointerEvents="none">
@@ -119,6 +126,10 @@ function Ember({
     // ---- charging drift: a slow upward column of embers ----
     // density follows the hold, so a dormant screen is perfectly still
     const density = Math.max(0, wake.value * 0.75 + pressing.value * 0.25 - 0.18);
+    // dormant: invisible, so return a constant and stop pushing frame updates
+    if (density <= 0) {
+      return {opacity: 0, transform: [{translateX: 0}, {translateY: 0}, {scale: 1}]};
+    }
     const t = (drift.value + spark.phase) % 1;
     return {
       opacity:

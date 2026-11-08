@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet, Pressable, LayoutChangeEvent} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import Svg, {Line, Polyline, Circle} from 'react-native-svg';
 import dayjs from 'dayjs';
 
@@ -10,9 +11,12 @@ import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
 import {useInsights} from '@/store/selectors';
 
-const CHART_W = 250;
-const CHART_H = 80;
-const X_LABELS = ['6am', 'noon', '6pm', 'mid'];
+/** Horizontal inset so the first/last points and their labels aren't clipped. */
+const CHART_PAD_X = 18;
+/** Room above the highest point and below the baseline. */
+const CHART_PAD_TOP = 12;
+const CHART_PAD_BOTTOM = 10;
+const AXIS_LABEL_W = 44;
 
 /**
  * JOURNAL — PATTERNS, per Ember_Proportions.md.
@@ -25,30 +29,49 @@ export default function PatternsScreen() {
   const m = useMetrics();
   const T = m.type;
   const journal = useStore(s => s.journal);
+  const nav = useNavigation<any>();
   const [showLog, setShowLog] = useState(false);
 
   const hasData = insights.entryCount > 0;
 
-  const pts = insights.cravingByBucket
-    .map((v, i) => {
-      const x = 6 + (i / 5) * (CHART_W - 12);
-      const y = CHART_H - 16 - (v / 5) * (CHART_H - 28);
-      return `${x.toFixed(0)},${y.toFixed(0)}`;
-    })
-    .join(' ');
+  // Drawn in real pixels (measured), not a stretched viewBox — a non-uniform
+  // viewBox squashed the peak dot into an ellipse and warped the stroke.
+  const [chartW, setChartW] = useState(0);
+  const chartH = m.h(0.22);
+  const onChartLayout = (e: LayoutChangeEvent) => setChartW(e.nativeEvent.layout.width);
 
-  const peakPoint =
-    insights.peakBucket >= 0
-      ? {
-          x: 6 + (insights.peakBucket / 5) * (CHART_W - 12),
-          y: CHART_H - 16 - (insights.cravingByBucket[insights.peakBucket] / 5) * (CHART_H - 28),
-        }
-      : null;
+  const buckets = insights.cravingByBucket.length;
+  const xAt = (i: number) =>
+    CHART_PAD_X + (buckets > 1 ? (i / (buckets - 1)) * (chartW - CHART_PAD_X * 2) : 0);
+  const baseY = chartH - CHART_PAD_BOTTOM;
+  // craving runs 1..5; 1 sits just above the baseline, 5 at the top
+  const yAt = (v: number) => baseY - ((v - 1) / 4) * (baseY - CHART_PAD_TOP) - 4;
+
+  // Only buckets with check-ins are plotted. An empty bucket averages to 0,
+  // which is below the 1..5 scale — drawing it would claim "no cravings"
+  // when the truth is "no data".
+  const points = insights.cravingByBucket
+    .map((v, i) => ({i, v}))
+    .filter(pt => pt.v > 0)
+    .map(pt => ({x: xAt(pt.i), y: yAt(pt.v), i: pt.i}));
+  const polyline = points.map(pt => `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`).join(' ');
+  const peak = points.find(pt => pt.i === insights.peakBucket) ?? null;
 
   return (
     <Screen scroll contentStyle={[styles.content, {paddingHorizontal: m.gutter}]}>
       <View style={[styles.headerBand, {height: m.h(0.065)}]}>
         <Text style={[T.label, styles.kicker, {color: colors.muted}]}>Your patterns</Text>
+        {/* the stack has no header, so make the way back explicit */}
+        <Pressable
+          // popTo, not navigate: in React Navigation 7, navigate() to a screen
+          // already in the stack pushes a duplicate instead of going back.
+          onPress={() => nav.popTo('CheckIn')}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="New check-in"
+          style={styles.checkInLink}>
+          <Text style={[T.caption, styles.checkInTxt]}>+ Check in</Text>
+        </Pressable>
       </View>
 
       <Card strong style={[styles.insight, {height: m.h(0.13)}]}>
@@ -66,17 +89,42 @@ export default function PatternsScreen() {
       <View style={[styles.chartLabelBand, {height: m.h(0.035)}]}>
         <Text style={[T.label, {color: colors.muted}]}>Craving by time of day</Text>
       </View>
-      <Svg width="100%" height={m.h(0.22)} viewBox={`0 0 ${CHART_W} ${CHART_H}`} preserveAspectRatio="none">
-        <Line x1="0" y1={CHART_H - 16} x2={CHART_W} y2={CHART_H - 16} stroke={colors.border} />
-        {hasData && <Polyline points={pts} fill="none" stroke={colors.ink} strokeWidth={2.4} />}
-        {peakPoint && <Circle cx={peakPoint.x} cy={peakPoint.y} r={4} fill={colors.accent} />}
-      </Svg>
+      <View onLayout={onChartLayout} style={{height: chartH}}>
+        {chartW > 0 && (
+          <Svg width={chartW} height={chartH}>
+            <Line x1={0} y1={baseY} x2={chartW} y2={baseY} stroke={colors.border} strokeWidth={1.5} />
+            {points.length > 1 && (
+              <Polyline
+                points={polyline}
+                fill="none"
+                stroke={colors.ink}
+                strokeWidth={2.4}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            )}
+            {/* a lone check-in is a dot, not an invisible zero-length line */}
+            {points.length === 1 && (
+              <Circle cx={points[0].x} cy={points[0].y} r={3.5} fill={colors.ink} />
+            )}
+            {peak && <Circle cx={peak.x} cy={peak.y} r={5} fill={colors.accent} />}
+          </Svg>
+        )}
+      </View>
+      {/* one label per bucket, centred under that bucket's x */}
       <View style={[styles.xLabels, {height: m.h(0.03)}]}>
-        {X_LABELS.map(l => (
-          <Text key={l} style={[T.caption, {color: colors.frame}]}>
-            {l}
-          </Text>
-        ))}
+        {chartW > 0 &&
+          insights.bucketLabels.map((l, i) => (
+            <Text
+              key={l}
+              style={[
+                T.caption,
+                styles.xLabel,
+                {left: xAt(i) - AXIS_LABEL_W / 2, width: AXIS_LABEL_W, color: colors.frame},
+              ]}>
+              {l}
+            </Text>
+          ))}
       </View>
 
       <View style={{height: m.h(0.04)}} />
@@ -84,7 +132,7 @@ export default function PatternsScreen() {
       <Card style={[styles.tip, {height: m.h(0.13)}]}>
         <Text style={[T.body, {color: colors.ink}]}>
           {insights.peakLabel
-            ? `${cap(insights.peakLabel)} is your weak spot. Plan something around then.`
+            ? `${insights.peakLabel} are your weak spot. Plan something around then.`
             : 'Your weak spots will show up here as you check in.'}
         </Text>
       </Card>
@@ -124,7 +172,6 @@ export default function PatternsScreen() {
   );
 }
 
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const styles = StyleSheet.create({
   content: {flexGrow: 1},
@@ -132,7 +179,10 @@ const styles = StyleSheet.create({
   kicker: {textAlign: 'center'},
   insight: {justifyContent: 'center'},
   chartLabelBand: {justifyContent: 'flex-end'},
-  xLabels: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start'},
+  xLabels: {position: 'relative'},
+  xLabel: {position: 'absolute', top: 2, textAlign: 'center'},
+  checkInLink: {position: 'absolute', right: 0, bottom: 0},
+  checkInTxt: {color: colors.ink, fontWeight: '500'},
   tip: {justifyContent: 'center', borderColor: colors.border},
   flexGap: {flex: 1},
   log: {marginTop: 4},

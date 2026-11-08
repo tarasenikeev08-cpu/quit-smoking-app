@@ -8,6 +8,7 @@ import TabNavigator from './TabNavigator';
 import SlipScreen from '@/screens/slip/SlipScreen';
 import PaywallScreen from '@/screens/onboarding/PaywallScreen';
 import {useStore} from '@/store';
+import {useDayClock} from '@/lib/clock';
 import {colors} from '@/theme';
 import type {RootParamList} from './types';
 
@@ -19,6 +20,7 @@ const navTheme: Theme = {
 };
 
 export default function RootNavigator() {
+  useDayClock();
   const hydrated = useStore(s => s.hydrated);
   const onboarded = useStore(s => s.onboarded);
 

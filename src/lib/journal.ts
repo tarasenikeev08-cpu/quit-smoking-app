@@ -23,17 +23,36 @@ export type JournalEntry = {
 
 export type Insights = {
   entryCount: number;
-  /** multiplier: craving on days with a given trigger vs. without */
+  /**
+   * How much stronger cravings are on entries tagged Alcohol vs. untagged ones.
+   * Only reported when it's a real effect (>= 1.2x); null otherwise, so the UI
+   * never claims "0.6x harder" or "1x harder".
+   */
   alcoholMultiplier: number | null;
   /** average craving per 4-hour bucket starting 6am: [6-10,10-14,14-18,18-22,22-2,2-6] */
   cravingByBucket: number[];
   bucketLabels: string[];
   /** index of the peak craving bucket, or -1 when no data */
   peakBucket: number;
+  /** human name for the peak bucket, plural ("Afternoons"), or null */
   peakLabel: string | null;
 };
 
-const BUCKET_LABELS = ['6am', 'late am', 'afternoon', 'evening', 'late', 'night'];
+/** Short axis labels, one per 4h bucket, at each bucket's midpoint. */
+const BUCKET_LABELS = ['8am', 'noon', '4pm', '8pm', 'mid', '4am'];
+
+/** Readable names for the same buckets, used in sentences. */
+const BUCKET_NAMES = [
+  'Mornings',
+  'Middays',
+  'Afternoons',
+  'Evenings',
+  'Late nights',
+  'Small hours',
+];
+
+/** Smallest multiplier worth telling the user about. */
+const MIN_MULTIPLIER = 1.2;
 
 function bucketOf(iso: string): number {
   const h = dayjs(iso).hour();
@@ -77,14 +96,17 @@ export function computeInsights(entries: JournalEntry[]): Insights {
   if (withAlc.length >= 1 && withoutAlc.length >= 1) {
     const a = withAlc.reduce((s, e) => s + e.craving, 0) / withAlc.length;
     const b = withoutAlc.reduce((s, e) => s + e.craving, 0) / withoutAlc.length;
-    if (b > 0) mult = Math.round((a / b) * 10) / 10;
+    if (b > 0) {
+      const ratio = Math.round((a / b) * 10) / 10;
+      if (ratio >= MIN_MULTIPLIER) mult = ratio;
+    }
   }
 
   return {
     ...base,
     cravingByBucket: avg,
     peakBucket: peak,
-    peakLabel: peak >= 0 ? BUCKET_LABELS[peak] : null,
+    peakLabel: peak >= 0 ? BUCKET_NAMES[peak] : null,
     alcoholMultiplier: mult,
   };
 }

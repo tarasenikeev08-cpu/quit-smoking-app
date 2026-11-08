@@ -1,4 +1,13 @@
-import {useWindowDimensions} from 'react-native';
+import {Platform, useWindowDimensions} from 'react-native';
+
+/**
+ * On web the app renders inside a phone-width column (#root, max-width 430px —
+ * see public/index.html), but useWindowDimensions reports the whole browser
+ * window. Without this clamp a desktop window sizes every width-based token
+ * off ~1280px and the companion overflows the column. Keep in sync with the
+ * #root max-width.
+ */
+export const WEB_APP_MAX_WIDTH = 430;
 
 /**
  * Screen-relative proportions — the single source of truth for layout.
@@ -49,7 +58,10 @@ export const baseType = (height: number) => height * 0.071;
 export type Metrics = ReturnType<typeof useMetrics>;
 
 export function useMetrics() {
-  const {width, height} = useWindowDimensions();
+  const window = useWindowDimensions();
+  const width =
+    Platform.OS === 'web' ? Math.min(window.width, WEB_APP_MAX_WIDTH) : window.width;
+  const height = window.height;
   const base = baseType(height);
   const t = (r: number) => Math.round(base * r);
   /** band height from a fraction of screen height */

@@ -2,6 +2,7 @@ import React, {useEffect} from 'react';
 import {StyleSheet, View} from 'react-native';
 import Svg, {Path} from 'react-native-svg';
 import Animated, {
+  cancelAnimation,
   Extrapolation,
   interpolate,
   useAnimatedStyle,
@@ -30,6 +31,18 @@ const CORE =
  */
 function lick(t: number, sway: number, stretch: number, amp: number, height: number) {
   'worklet';
+  if (amp <= 0) {
+    return {
+      transform: [
+        {translateY: 0},
+        {scaleY: 1},
+        {scaleX: 1},
+        {translateY: 0},
+        {translateX: 0},
+        {rotate: '0deg'},
+      ],
+    };
+  }
   return {
     transform: [
       {translateY: height * 0.5},
@@ -75,7 +88,7 @@ function Lick({
  * cold ember sits still and a lit flame dances.
  */
 export default function LiveFlame({size}: {size: number}) {
-  const {wake, celebrate} = useWake();
+  const {wake, celebrate, active} = useWake();
   const width = size;
   const height = size * RATIO;
 
@@ -85,10 +98,16 @@ export default function LiveFlame({size}: {size: number}) {
   const f3 = useSharedValue(0);
 
   useEffect(() => {
+    const stop = () => [f1, f2, f3].forEach(cancelAnimation);
+    if (!active) {
+      stop();
+      return;
+    }
     f1.value = withRepeat(withTiming(1, {duration: 430, easing: EASE_IN_OUT}), -1, true);
     f2.value = withRepeat(withTiming(1, {duration: 670, easing: EASE_IN_OUT}), -1, true);
     f3.value = withRepeat(withTiming(1, {duration: 310, easing: EASE_IN_OUT}), -1, true);
-  }, [f1, f2, f3]);
+    return stop;
+  }, [active, f1, f2, f3]);
 
   /** Whole-flame: grows as it catches, flares on completion. */
   const bodyStyle = useAnimatedStyle(() => {
@@ -116,15 +135,21 @@ export default function LiveFlame({size}: {size: number}) {
   // Written out rather than generated in a loop so every useAnimatedStyle is
   // a plain top-level hook call.
   const outerStyle = useAnimatedStyle(() => {
-    const amp = interpolate(wake.value, [0, 1], [0.12, 1], Extrapolation.CLAMP);
+    // the lit flame is invisible below ~0.15 wake: hold it still (amp 0)
+    const amp =
+      wake.value < 0.15 ? 0 : interpolate(wake.value, [0, 1], [0.12, 1], Extrapolation.CLAMP);
     return lick(f2.value - 0.5, size * 0.055, 0.1, amp, height);
   });
   const midStyle = useAnimatedStyle(() => {
-    const amp = interpolate(wake.value, [0, 1], [0.12, 1], Extrapolation.CLAMP);
+    // the lit flame is invisible below ~0.15 wake: hold it still (amp 0)
+    const amp =
+      wake.value < 0.15 ? 0 : interpolate(wake.value, [0, 1], [0.12, 1], Extrapolation.CLAMP);
     return lick(f1.value - 0.5, size * 0.085, 0.17, amp, height);
   });
   const coreStyle = useAnimatedStyle(() => {
-    const amp = interpolate(wake.value, [0, 1], [0.12, 1], Extrapolation.CLAMP);
+    // the lit flame is invisible below ~0.15 wake: hold it still (amp 0)
+    const amp =
+      wake.value < 0.15 ? 0 : interpolate(wake.value, [0, 1], [0.12, 1], Extrapolation.CLAMP);
     return lick(f3.value - 0.5, size * 0.1, 0.24, amp, height);
   });
 

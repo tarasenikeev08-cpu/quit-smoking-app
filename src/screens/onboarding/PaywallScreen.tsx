@@ -23,9 +23,17 @@ export default function PaywallScreen() {
 
   const [plan, setPlan] = useState<MockPlan | null>(null);
   const [busy, setBusy] = useState(false);
+  /** one-line status shown in place of the fine print (errors, restore result) */
+  const [note, setNote] = useState<string | null>(null);
 
   useEffect(() => {
-    getOffering().then(setPlan);
+    let alive = true;
+    getOffering()
+      .then(p => alive && setPlan(p))
+      .catch(() => alive && setNote('Couldn’t load the offer. You can continue for now.'));
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const proceed = () => {
@@ -33,18 +41,36 @@ export default function PaywallScreen() {
     else finishOnboarding();
   };
 
+  // try/finally so a failed or cancelled purchase can never leave the spinner
+  // stuck — the mocks don't throw, but the real provider will.
   const onClaim = async () => {
-    if (!plan) return;
+    if (!plan || busy) return;
     setBusy(true);
-    await purchase(plan.id); // mock: flips isPremium in the store
-    setBusy(false);
-    proceed();
+    setNote(null);
+    try {
+      const ok = await purchase(plan.id); // mock: flips isPremium in the store
+      if (ok) proceed();
+      else setNote('Purchase didn’t go through. Nothing was charged.');
+    } catch {
+      setNote('Something went wrong. Please try again.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const onRestore = async () => {
+    if (busy) return;
     setBusy(true);
-    await restore();
-    setBusy(false);
+    setNote(null);
+    try {
+      const restored = await restore();
+      if (restored) proceed();
+      else setNote('No previous purchase found on this account.');
+    } catch {
+      setNote('Couldn’t reach the store. Please try again.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -87,8 +113,10 @@ export default function PaywallScreen() {
         </View>
 
         <View style={[styles.fineBand, {height: m.h(0.055)}]}>
-          <Text style={[T.caption, styles.finePrint, {color: colors.mutedOnInk}]}>
-            Less than one pack. Cancel anytime.
+          <Text
+            accessibilityLiveRegion="polite"
+            style={[T.caption, styles.finePrint, {color: note ? colors.paper : colors.mutedOnInk}]}>
+            {note ?? 'Less than one pack. Cancel anytime.'}
           </Text>
         </View>
 
@@ -108,10 +136,10 @@ export default function PaywallScreen() {
         </Pressable>
 
         <View style={[styles.footerLinks, {height: m.h(0.06)}]}>
-          <Pressable onPress={onRestore} hitSlop={10}>
+          <Pressable onPress={onRestore} hitSlop={10} disabled={busy} accessibilityRole="button">
             <Text style={[T.caption, {color: colors.mutedOnInk}]}>Restore</Text>
           </Pressable>
-          <Pressable onPress={proceed} hitSlop={10}>
+          <Pressable onPress={proceed} hitSlop={10} disabled={busy} accessibilityRole="button">
             <Text style={[T.caption, {color: colors.mutedOnInk}]}>Maybe later</Text>
           </Pressable>
         </View>
