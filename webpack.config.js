@@ -21,6 +21,8 @@ const rnPackages = [
   'react-native-screens',
   'react-native-safe-area-context',
   'react-native-svg',
+  'react-native-reanimated',
+  'react-native-worklets',
   '@react-native-async-storage',
 ].map(p => path.resolve(root, 'node_modules', p));
 
@@ -74,6 +76,9 @@ module.exports = {
             babelrc: false,
             sourceType: 'unambiguous',
             presets: ['module:@react-native/babel-preset'],
+            // MUST be last: compiles Reanimated worklets. babel.config.js is
+            // not used here (configFile:false), so it is repeated for web.
+            plugins: ['react-native-worklets/plugin'],
             cacheDirectory: false,
           },
         },

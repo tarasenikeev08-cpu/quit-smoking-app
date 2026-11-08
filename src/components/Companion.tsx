@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, {Path, Circle, Rect, Line, Ellipse, G} from 'react-native-svg';
+import Svg, {Path, Circle, Rect, Ellipse, G} from 'react-native-svg';
 import {colors} from '@/theme';
 
 export type CompanionId =
@@ -12,6 +12,70 @@ export type CompanionId =
   | 'kit'
   | 'dragon'
   | 'phoenix';
+
+/** Where a companion's eyes and mouth sit, in ITS OWN viewBox units. */
+export type FaceGeom = {
+  viewBox: number;
+  eyes: {cx: number; cy: number; r: number}[];
+  /** smile arc: centred at cx,cy, w wide, dipping `depth` below the baseline */
+  mouth: {cx: number; cy: number; w: number; depth: number} | null;
+};
+
+/**
+ * Face geometry, taken from the same reference coordinates the shapes use.
+ * CompanionWake animates eyes/mouth as separate layers from this, so the
+ * artwork itself is never redrawn.
+ */
+export function faceGeom(id: CompanionId, size: number): FaceGeom | null {
+  // Puff's hero artwork is a different, richer drawing in a 150 box.
+  if (id === 'puff' && size >= 100) {
+    return {
+      viewBox: 150,
+      eyes: [
+        {cx: 64, cy: 52, r: 3.2},
+        {cx: 86, cy: 52, r: 3.2},
+      ],
+      mouth: {cx: 77, cy: 60, w: 12, depth: 6},
+    };
+  }
+  const two = (cy: number, r: number, mouthY: number): FaceGeom => ({
+    viewBox: 44,
+    eyes: [
+      {cx: 18, cy, r},
+      {cx: 26, cy, r},
+    ],
+    mouth: {cx: 22, cy: mouthY, w: 6, depth: 3},
+  });
+  switch (id) {
+    case 'puff':
+      return {
+        viewBox: 44,
+        eyes: [
+          {cx: 19, cy: 18, r: 1.8},
+          {cx: 27, cy: 18, r: 1.8},
+        ],
+        mouth: {cx: 23, cy: 23, w: 6, depth: 3},
+      };
+    case 'mecha':
+      return two(23, 2, 28);
+    case 'slime':
+      return two(24, 1.6, 28.5);
+    case 'pebble':
+      return two(25, 1.6, 30);
+    case 'kit':
+      return two(24, 1.6, 28.5);
+    case 'luna':
+      return {viewBox: 44, eyes: [{cx: 23, cy: 22, r: 1.5}], mouth: null};
+    case 'dragon':
+      return {viewBox: 44, eyes: [{cx: 20, cy: 22, r: 1.7}], mouth: null};
+    case 'phoenix':
+      return {viewBox: 44, eyes: [{cx: 22, cy: 14, r: 1.4}], mouth: null};
+    // Sprout has no face in the reference artwork — leave it faceless.
+    case 'sprout':
+    default:
+      return null;
+  }
+}
 
 type Props = {
   id: CompanionId;

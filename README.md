@@ -37,7 +37,7 @@ cp .env.example .env    # optional; only needed once the backend/payments are wi
 iOS (needs Xcode + CocoaPods):
 
 ```bash
-cd ios && pod install && cd ..
+cd ios && pod install && cd ..   # required: Reanimated, worklets, haptics are native modules
 npm run ios
 ```
 
@@ -58,9 +58,11 @@ npm test            # jest
 
 ```
 src/
-  theme/            design tokens (colours, type, spacing, strokes)
-  components/       Flame, Companion, Icon, Screen, ui primitives
+  theme/            design tokens (colours, type, spacing, strokes) + metrics
+  anim/             the wake engine — shared motion state + motion tokens
+  components/       Companion, LiveFlame, Embers, WarmWash, HoldButton, ui
   lib/              pure domain logic — streak, ranks, companions, savings, journal
+                    plus haptics.ts / haptics.web.ts (native taptics, web no-op)
   store/            Zustand store (AsyncStorage-persisted) + selectors
   screens/          onboarding · home · rank · journal · collection · slip
   navigation/       root gate, tabs, onboarding + journal stacks, custom TabBar
@@ -70,6 +72,30 @@ supabase/schema.sql draft schema + RLS for the eventual Supabase wiring
 
 State is **local-first**: the Zustand store is the source of truth and persists
 to the device. A backend only mirrors it later.
+
+### The daily hold (`src/anim/`)
+
+The hold is the app's one real interaction, so it is built as a **single
+screen-wide event** rather than a button animation. `useWakeEngine()` owns a
+small set of Reanimated shared values:
+
+| Value | Meaning |
+|---|---|
+| `wake` | 0 dormant → 1 fully awake — the master "aliveness" value |
+| `charge` | 0 → 1 linear hold progress, drives the bar fill exactly |
+| `pressing` | 0/1 finger down — suppresses the inviting halo |
+| `celebrate` | one-shot completion pulse — the hop and the flame flare |
+| `burst` | one-shot ember-burst lifetime |
+
+Everything on Home reads from them, so the companion, flame, embers, hold bar
+and background warmth all move as one. Releasing early springs `wake` back and
+logs nothing; completing it banks the day and the bright state persists until
+the next rollover.
+
+Animation is **transforms and opacity only** — the dim and bright drawings are
+stacked and cross-faded rather than restyled, so every frame stays on the
+compositor and the reference artwork is never redrawn. Haptics are native-only
+(`haptic()` is a no-op on web); the visuals are identical on both.
 
 ### Streak vs. lifetime days (by design)
 

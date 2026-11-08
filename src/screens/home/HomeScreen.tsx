@@ -1,9 +1,18 @@
-import React, {useRef} from 'react';
-import {Animated, Easing, StyleSheet, Text, View} from 'react-native';
+import React from 'react';
+import {StyleSheet, Text, View} from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import Screen from '@/components/Screen';
-import Flame from '@/components/Flame';
-import Companion from '@/components/Companion';
+import LiveFlame from '@/components/LiveFlame';
+import CompanionWake from '@/components/CompanionWake';
+import Embers from '@/components/Embers';
+import WarmWash from '@/components/WarmWash';
 import Icon from '@/components/Icon';
 import HoldButton from '@/components/HoldButton';
 import {Stat} from '@/components/ui';
@@ -11,7 +20,9 @@ import {colors, controls as fixed} from '@/theme';
 import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
 import {useStreakDays, useRank, useSavings, useHeldToday} from '@/store/selectors';
-import {haptic} from '@/lib/platform';
+import {companionName} from '@/lib/companions';
+import {SPRING_HOP, EASE_OUT} from '@/anim/config';
+import {WakeProvider, useWakeEngine} from '@/anim/wake';
 
 /**
  * HOME — built to Ember_Proportions.md. Every band is a percentage of screen
@@ -22,39 +33,58 @@ import {haptic} from '@/lib/platform';
  *
  * There is exactly ONE flexible gap, and it sits between the day count and the
  * stat row — never above the companion, never below the hold bar.
+ *
+ * The daily hold is the screen's one interaction: it drives a shared wake
+ * engine (src/anim/wake.tsx) that every element reads from, so holding the bar
+ * warms the background, revives the companion and lights the flame as one
+ * continuous event.
  */
 export default function HomeScreen() {
+  const heldToday = useHeldToday();
+  const engine = useWakeEngine(heldToday);
+
+  return (
+    <WakeProvider engine={engine}>
+      <HomeContent />
+    </WakeProvider>
+  );
+}
+
+function HomeContent() {
   const streak = useStreakDays();
   const {current} = useRank();
   const {saved, avoided, habit} = useSavings();
   const equipped = useStore(s => s.equipped);
   const markHeld = useStore(s => s.markHeld);
-  const heldToday = useHeldToday();
   const m = useMetrics();
 
-  const react = useRef(new Animated.Value(0)).current;
+  // The streak number kicks with a spring overshoot the moment the hold lands,
+  // riding the same beat as the companion's hop.
+  const tick = useSharedValue(0);
+
   const onHoldComplete = () => {
     markHeld();
-    haptic('success');
-    Animated.sequence([
-      Animated.timing(react, {
-        toValue: 1,
-        duration: 170,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.spring(react, {toValue: 0, useNativeDriver: true, speed: 12, bounciness: 14}),
-    ]).start();
+    tick.value = withSequence(
+      withTiming(1, {duration: 140, easing: EASE_OUT}),
+      withSpring(0, SPRING_HOP),
+    );
   };
 
-  const scale = react.interpolate({inputRange: [0, 1], outputRange: [1, 1.12]});
-  const lift = react.interpolate({inputRange: [0, 1], outputRange: [0, -12]});
+  const countStyle = useAnimatedStyle(() => ({
+    transform: [
+      {scale: 1 + tick.value * 0.22},
+      {translateY: -tick.value * 6},
+    ],
+  }));
 
   // flame sits at ~0.39x the day-count cap height, beside the number
   const flameSize = Math.round(m.type.dayCount.fontSize * 0.312);
 
   return (
     <Screen>
+      {/* the screen's own reaction: cool when dormant, warm as it wakes */}
+      <WarmWash />
+
       <View style={[styles.wrap, {paddingHorizontal: m.gutter}]}>
         {/* header 6.5% */}
         <View style={[styles.header, {height: m.band.header}]}>
@@ -69,9 +99,7 @@ export default function HomeScreen() {
 
         {/* companion band 30% — the visual anchor */}
         <View style={[styles.centered, {height: m.band.companion}]}>
-          <Animated.View style={{transform: [{scale}, {translateY: lift}]}}>
-            <Companion id={equipped} size={m.companionSize} shadow />
-          </Animated.View>
+          <CompanionWake id={equipped} size={m.companionSize} />
         </View>
 
         {/* gap 1.5% */}
@@ -79,10 +107,14 @@ export default function HomeScreen() {
 
         {/* day count group 12% */}
         <View style={[styles.centered, {height: m.band.countGroup}]}>
-          <View style={styles.countRow}>
+          <Animated.View style={[styles.countRow, countStyle]}>
             <Text style={[m.type.dayCount, {color: colors.ink}]}>{streak}</Text>
-            <Flame size={flameSize} layers={2} />
-          </View>
+            <View>
+              <LiveFlame size={flameSize} />
+              {/* sparks rise off the flame and burst from it on completion */}
+              <Embers size={flameSize} spread={m.type.dayCount.fontSize * 2.6} />
+            </View>
+          </Animated.View>
           <Text style={[m.type.label, {color: colors.muted, marginTop: 4}]}>Days clean</Text>
         </View>
 
@@ -99,7 +131,7 @@ export default function HomeScreen() {
         <View style={{height: m.band.gap}} />
 
         {/* hold bar 6.6% */}
-        <HoldButton onComplete={onHoldComplete} held={heldToday} />
+        <HoldButton onComplete={onHoldComplete} companionName={companionName(equipped)} />
 
         {/* bottom gap 3% above the tab bar (fixed, not flexible) */}
         <View style={{height: m.band.gap}} />

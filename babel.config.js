@@ -20,6 +20,7 @@ module.exports = {
         allowUndefined: true,
       },
     ],
-    // react-native-gesture-handler / reanimated plugins would go last if added.
+    // MUST be last: Reanimated 4 worklets are compiled by this plugin.
+    'react-native-worklets/plugin',
   ],
 };

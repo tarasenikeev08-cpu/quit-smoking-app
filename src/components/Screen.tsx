@@ -27,7 +27,11 @@ export default function Screen({children, scroll, dark, contentStyle}: Props) {
 }
 
 const styles = StyleSheet.create({
-  safe: {flex: 1},
+  // overflow:hidden clips the decorative layers that deliberately spill past
+  // their parents (the hold bar's halo, the ember burst) at the screen edge,
+  // so they can never add scrollable area. It does not affect the inner
+  // ScrollView used by `scroll` screens.
+  safe: {flex: 1, overflow: 'hidden'},
   flex: {flex: 1},
   scrollContent: {paddingBottom: 32, flexGrow: 1},
 });
