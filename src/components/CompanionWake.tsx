@@ -81,25 +81,25 @@ export default function CompanionWake({id, size}: {id: CompanionId; size: number
         {scale: breathScale * grow * (1 + hop * 0.1)},
       ],
     };
-  });
+  }, [wake, breath, celebrate]);
 
   /** Dim drawing on top when asleep. */
   const dimStyle = useAnimatedStyle(() => ({
     opacity: interpolate(wake.value, [0, 0.85], [1, 0], Extrapolation.CLAMP),
-  }));
+  }), [wake]);
 
   /** Bright drawing fades in underneath it. */
   const brightStyle = useAnimatedStyle(() => ({
     opacity: interpolate(wake.value, [0.05, 0.75], [0, 1], Extrapolation.CLAMP),
-  }));
+  }), [wake]);
 
   /** Sleepy eye arcs: shut until half-woken, then the eyes snap open. */
   const shutStyle = useAnimatedStyle(() => ({
     opacity: interpolate(wake.value, [0.3, 0.62], [1, 0], Extrapolation.CLAMP),
-  }));
+  }), [wake]);
   const openStyle = useAnimatedStyle(() => ({
     opacity: interpolate(wake.value, [0.45, 0.7], [0, 1], Extrapolation.CLAMP),
-  }));
+  }), [wake]);
 
   /** The smile grows with the last third of the hold, and widens on the hop. */
   const smileStyle = useAnimatedStyle(() => {
@@ -108,7 +108,7 @@ export default function CompanionWake({id, size}: {id: CompanionId; size: number
       opacity: grow,
       transform: [{scaleX: 0.5 + grow * 0.5 + celebrate.value * 0.18}, {scaleY: grow}],
     };
-  });
+  }, [wake, celebrate]);
 
   /**
    * Contact shadow. It stays on the ground rather than travelling with the
@@ -124,7 +124,7 @@ export default function CompanionWake({id, size}: {id: CompanionId; size: number
         {scaleY: interpolate(lifted, [0, 1, 2], [1, 0.8, 0.55], Extrapolation.CLAMP)},
       ],
     };
-  });
+  }, [wake, celebrate]);
 
   /** A faint "z" drifting up and fading — only while genuinely asleep. */
   const zStyle = useAnimatedStyle(() => {
@@ -142,7 +142,7 @@ export default function CompanionWake({id, size}: {id: CompanionId; size: number
         {scale: 0.7 + t * 0.5},
       ],
     };
-  });
+  }, [wake, zDrift, size]);
 
   const zSize = Math.max(11, Math.round(size * 0.1));
 

@@ -23,7 +23,7 @@ export default function WarmWash() {
   /** Cool veil: strongest when fully dormant. */
   const coolStyle = useAnimatedStyle(() => ({
     opacity: interpolate(wake.value, [0, 1], [0.22, 0], Extrapolation.CLAMP),
-  }));
+  }), [wake]);
 
   /** Warm glow rising from the bottom of the screen. */
   const warmStyle = useAnimatedStyle(() => {
@@ -36,7 +36,7 @@ export default function WarmWash() {
         {scaleY: interpolate(w, [0, 1], [0.55, 1], Extrapolation.CLAMP) + celebrate.value * 0.12},
       ],
     };
-  });
+  }, [wake, celebrate]);
 
   return (
     <>

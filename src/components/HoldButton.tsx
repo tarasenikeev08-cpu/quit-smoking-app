@@ -149,12 +149,12 @@ export default function HoldButton({onComplete, companionName}: Props) {
       opacity: inviting * interpolate(halo.value, [0, 1], [0.45, 0.85]),
       transform: [{scale: interpolate(halo.value, [0, 1], [0.94, 1.04])}],
     };
-  });
+  }, [wake, pressing, halo]);
 
   /** The bar presses in, then springs with the celebration. */
   const barStyle = useAnimatedStyle(() => ({
     transform: [{scale: 1 - pressing.value * 0.02 + celebrate.value * 0.035}],
-  }));
+  }), [pressing, celebrate]);
 
   /**
    * Ink fill: a full-width slab slid in from the left (the track clips it),
@@ -163,7 +163,7 @@ export default function HoldButton({onComplete, companionName}: Props) {
   const fillStyle = useAnimatedStyle(() => ({
     opacity: w.value > 0 ? 1 : 0,
     transform: [{translateX: (charge.value - 1) * w.value}],
-  }));
+  }), [w, charge]);
 
   /** A hot edge burning along the fill boundary while charging. */
   const edgeStyle = useAnimatedStyle(() => {
@@ -173,7 +173,7 @@ export default function HoldButton({onComplete, companionName}: Props) {
       opacity: live * interpolate(halo.value, [0, 1], [0.8, 1]),
       transform: [{translateX: c * w.value}],
     };
-  });
+  }, [charge, pressing, halo, w]);
 
   /**
    * Inverted label: a window that slides in with the fill, holding a copy of
@@ -182,10 +182,10 @@ export default function HoldButton({onComplete, companionName}: Props) {
    */
   const windowStyle = useAnimatedStyle(() => ({
     transform: [{translateX: (charge.value - 1) * w.value}],
-  }));
+  }), [charge, w]);
   const windowTextStyle = useAnimatedStyle(() => ({
     transform: [{translateX: (1 - charge.value) * w.value}],
-  }));
+  }), [charge, w]);
 
   return (
     <View>

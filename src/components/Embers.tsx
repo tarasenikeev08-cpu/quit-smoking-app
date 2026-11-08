@@ -140,7 +140,7 @@ function Ember({
         {scale: interpolate(t, [0, 1], [1, 0.4], Extrapolation.CLAMP)},
       ],
     };
-  });
+  }, [burst, wake, pressing, drift, spark, rise]);
 
   return (
     <Animated.View

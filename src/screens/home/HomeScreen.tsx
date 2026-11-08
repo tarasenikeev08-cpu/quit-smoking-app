@@ -89,7 +89,7 @@ function HomeContent() {
       {scale: 1 + tick.value * 0.22},
       {translateY: -tick.value * 6},
     ],
-  }));
+  }), [tick]);
 
   // flame sits at ~0.39x the day-count cap height, beside the number
   const flameSize = Math.round(m.type.dayCount.fontSize * 0.312);

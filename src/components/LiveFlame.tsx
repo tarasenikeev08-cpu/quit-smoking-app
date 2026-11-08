@@ -119,17 +119,17 @@ export default function LiveFlame({size}: {size: number}) {
         {translateY: -flare * 4},
       ],
     };
-  });
+  }, [wake, celebrate]);
 
   /** Cold grey ember, fading out as the flame catches. */
   const emberStyle = useAnimatedStyle(() => ({
     opacity: interpolate(wake.value, [0, 0.55], [1, 0], Extrapolation.CLAMP),
-  }));
+  }), [wake]);
 
   /** The lit flame, fading in. */
   const litStyle = useAnimatedStyle(() => ({
     opacity: interpolate(wake.value, [0.15, 0.7], [0, 1], Extrapolation.CLAMP),
-  }));
+  }), [wake]);
 
   // Each layer is a lick of flame leaning and stretching on its own clock.
   // Written out rather than generated in a loop so every useAnimatedStyle is
@@ -139,19 +139,19 @@ export default function LiveFlame({size}: {size: number}) {
     const amp =
       wake.value < 0.15 ? 0 : interpolate(wake.value, [0, 1], [0.12, 1], Extrapolation.CLAMP);
     return lick(f2.value - 0.5, size * 0.055, 0.1, amp, height);
-  });
+  }, [wake, f2, size, height]);
   const midStyle = useAnimatedStyle(() => {
     // the lit flame is invisible below ~0.15 wake: hold it still (amp 0)
     const amp =
       wake.value < 0.15 ? 0 : interpolate(wake.value, [0, 1], [0.12, 1], Extrapolation.CLAMP);
     return lick(f1.value - 0.5, size * 0.085, 0.17, amp, height);
-  });
+  }, [wake, f1, size, height]);
   const coreStyle = useAnimatedStyle(() => {
     // the lit flame is invisible below ~0.15 wake: hold it still (amp 0)
     const amp =
       wake.value < 0.15 ? 0 : interpolate(wake.value, [0, 1], [0.12, 1], Extrapolation.CLAMP);
     return lick(f3.value - 0.5, size * 0.1, 0.24, amp, height);
-  });
+  }, [wake, f3, size, height]);
 
   return (
     <View style={{width, height}}>
