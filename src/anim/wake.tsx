@@ -51,8 +51,13 @@ export type WakeEngine = {
 
 const WakeContext = createContext<WakeEngine | null>(null);
 
-export function useWakeEngine(awake: boolean, active: boolean): WakeEngine {
-  const wake = useSharedValue(awake ? 1 : 0);
+/**
+ * `rest` is how awake the companion sits while not yet woken today — 0
+ * (asleep) normally. Straight after onboarding it rests at the level
+ * onboarding left it, waiting for the user's first hold.
+ */
+export function useWakeEngine(awake: boolean, active: boolean, rest = 0): WakeEngine {
+  const wake = useSharedValue(awake ? 1 : rest);
   const charge = useSharedValue(awake ? 1 : 0);
   const pressing = useSharedValue(0);
   const celebrate = useSharedValue(0);
@@ -67,9 +72,9 @@ export function useWakeEngine(awake: boolean, active: boolean): WakeEngine {
       wake.value = withSpring(1, SPRING_WAKE);
     } else {
       charge.value = withTiming(0, {duration: 450, easing: EASE_OUT});
-      wake.value = withTiming(0, {duration: 650, easing: EASE_OUT});
+      wake.value = withTiming(rest, {duration: 650, easing: EASE_OUT});
     }
-  }, [awake, wake, charge]);
+  }, [awake, rest, wake, charge]);
 
   return useMemo<WakeEngine>(
     () => ({
@@ -95,7 +100,7 @@ export function useWakeEngine(awake: boolean, active: boolean): WakeEngine {
         cancelAnimation(wake);
         pressing.value = withTiming(0, {duration: 160});
         charge.value = withTiming(0, {duration: 220, easing: EASE_OUT});
-        wake.value = withSpring(0, SPRING_SETTLE);
+        wake.value = withSpring(rest, SPRING_SETTLE);
       },
 
       /** held to the end: snap fully awake and fire the one-shot celebration */
@@ -112,7 +117,7 @@ export function useWakeEngine(awake: boolean, active: boolean): WakeEngine {
         burst.value = withTiming(1, {duration: 1150, easing: EASE_LINEAR});
       },
     }),
-    [wake, charge, pressing, celebrate, burst, awake, active],
+    [wake, charge, pressing, celebrate, burst, awake, active, rest],
   );
 }
 

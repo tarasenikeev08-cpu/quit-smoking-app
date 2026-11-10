@@ -31,8 +31,7 @@ import {formatMoney} from '@/lib/savings';
 import {formatDay} from '@/lib/days';
 import {companionName} from '@/lib/companions';
 import {SPRING_HOP, EASE_OUT, ONBOARDING_HANDOFF_WAKE} from '@/anim/config';
-import {WakeProvider, useWake, useWakeEngine} from '@/anim/wake';
-import {haptic} from '@/lib/platform';
+import {WakeProvider, useWakeEngine} from '@/anim/wake';
 
 /**
  * HOME — built to Ember_Proportions.md. Every band is a percentage of screen
@@ -63,7 +62,10 @@ function useScreenActive(): boolean {
 export default function HomeScreen() {
   const heldToday = useHeldToday();
   const active = useScreenActive();
-  const engine = useWakeEngine(heldToday, active);
+  // Just out of onboarding: the companion stays as awake as onboarding left
+  // it (not back to sleep) until the user's first hold wakes it fully.
+  const arrived = useStore(s => s.arrivedFromOnboarding);
+  const engine = useWakeEngine(heldToday, active, arrived ? ONBOARDING_HANDOFF_WAKE : 0);
 
   return (
     <WakeProvider engine={engine}>
@@ -80,8 +82,8 @@ function HomeContent() {
   const today = useStore(s => s.today);
   const equipped = useStore(s => s.equipped);
   const markHeld = useStore(s => s.markHeld);
-  const clearCelebration = useStore(s => s.clearCelebration);
-  const engine = useWake();
+  const clearArrival = useStore(s => s.clearArrival);
+  const firstHold = useStore(s => s.lastHeldAt === null);
   const nav = useNavigation<any>();
   const m = useMetrics();
 
@@ -98,37 +100,20 @@ function HomeContent() {
   const onHoldComplete = () => {
     markHeld();
     kickCount();
+    clearArrival();
   };
 
   /*
-   * Hand-off from onboarding — played once, straight after it finishes.
-   * The screen fades in with the companion exactly as awake as onboarding
-   * left it, then it finishes waking: hop, flame flare, ember burst, the
-   * count kicks, and a success haptic. Finishing onboarding already banked
-   * today's hold, so it stays awake afterwards.
+   * Arrival from onboarding: the screen fades in with the companion exactly
+   * as awake as onboarding left it, and the hold bar reads "Hold to begin".
+   * Nothing is logged for the user — the first hold is theirs, and it plays
+   * the full wake: hop, flame flare, ember burst, count kick.
    */
-  const intro = useRef(useStore.getState().celebrateOnboarding).current;
+  const intro = useRef(useStore.getState().arrivedFromOnboarding).current;
   const screenIn = useSharedValue(intro ? 0 : 1);
   useEffect(() => {
-    if (!intro) return;
-    // after the engine's own mount effect, which starts it fully awake
-    const settle = setTimeout(() => {
-      engine.wake.value = ONBOARDING_HANDOFF_WAKE;
-      engine.charge.value = 0;
-      screenIn.value = withTiming(1, {duration: 480, easing: EASE_OUT});
-    }, 0);
-    const wake = setTimeout(() => {
-      engine.complete();
-      engine.charge.value = withTiming(1, {duration: 650, easing: EASE_OUT});
-      haptic('success');
-      kickCount();
-      clearCelebration();
-    }, 700);
-    return () => {
-      clearTimeout(settle);
-      clearTimeout(wake);
-    };
-    // runs once, for the mount that follows onboarding
+    if (intro) screenIn.value = withTiming(1, {duration: 480, easing: EASE_OUT});
+    // once, for the mount that follows onboarding
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const screenInStyle = useAnimatedStyle(() => ({opacity: screenIn.value}), [screenIn]);
@@ -213,7 +198,11 @@ function HomeContent() {
         <View style={{height: m.band.gap}} />
 
         {/* hold bar 6.6% */}
-        <HoldButton onComplete={onHoldComplete} companionName={companionName(equipped)} />
+        <HoldButton
+          onComplete={onHoldComplete}
+          companionName={companionName(equipped)}
+          firstHold={firstHold}
+        />
 
         {/* bottom gap 3% above the tab bar (fixed, not flexible) */}
         <View style={{height: m.band.gap}} />

@@ -56,10 +56,11 @@ export type AppState = {
    */
   today: DayKey;
   /**
-   * Runtime only: set when onboarding has just finished, so Home plays the
-   * hand-off celebration once. Never persisted — a relaunch doesn't replay it.
+   * Runtime only: set when onboarding has just finished. Home fades in with
+   * the companion as awake as onboarding left it, waiting for the user's
+   * first hold. Never persisted — a relaunch starts from the normal state.
    */
-  celebrateOnboarding: boolean;
+  arrivedFromOnboarding: boolean;
 
   onboarded: boolean;
   /** what the user quit and what it cost — entered in onboarding */
@@ -87,8 +88,8 @@ export type AppState = {
   setQuitDate: (day: DayKey) => void;
   /** last onboarding step: start the streak from the quit date */
   finishOnboarding: () => void;
-  /** Home has played the hand-off celebration */
-  clearCelebration: () => void;
+  /** the first hold after onboarding has happened */
+  clearArrival: () => void;
   /** save today's check-in (replaces an earlier one from today) */
   logEntry: (e: {craving: number; triggers: Trigger[]; mood: number}) => void;
   /** slip, kept: spend one of this month's free restores */
@@ -106,8 +107,8 @@ type PersistedState = Omit<
   AppState,
   | 'hydrated'
   | 'today'
-  | 'celebrateOnboarding'
-  | 'clearCelebration'
+  | 'arrivedFromOnboarding'
+  | 'clearArrival'
   | 'syncToday'
   | 'setHabitType'
   | 'updateHabit'
@@ -314,7 +315,7 @@ export const useStore = create<AppState>()(
     (set, get) => ({
       hydrated: false,
       today: todayKey(),
-      celebrateOnboarding: false,
+      arrivedFromOnboarding: false,
       ...freshData(todayKey()),
 
       syncToday: () => {
@@ -350,14 +351,14 @@ export const useStore = create<AppState>()(
           quitDate: start,
           streak: recordProgress(newStreak(start), d),
           ledger: [],
-          // Finishing onboarding is the first commitment: it counts as today's
-          // hold, and Home opens on the companion waking up for it.
-          lastHeldAt: d,
-          celebrateOnboarding: true,
+          // Day one's hold is left to the user: it's their first step, and
+          // Home opens with the companion waiting for it.
+          lastHeldAt: null,
+          arrivedFromOnboarding: true,
         });
       },
 
-      clearCelebration: () => set({celebrateOnboarding: false}),
+      clearArrival: () => set({arrivedFromOnboarding: false}),
 
       logEntry: e => {
         const d = todayKey();
@@ -428,7 +429,7 @@ export const useStore = create<AppState>()(
 
       resetAll: () => {
         const d = todayKey();
-        set({today: d, celebrateOnboarding: false, ...freshData(d)});
+        set({today: d, arrivedFromOnboarding: false, ...freshData(d)});
       },
     }),
     {

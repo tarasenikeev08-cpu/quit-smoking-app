@@ -56,15 +56,17 @@ describe('onboarding drives real state', () => {
     expect(moneySaved(S().habit, lifetime())).toBe(75); // 1 pack/day x $15 x 5
   });
 
-  test('finishing onboarding banks day one and cues the Home celebration once', async () => {
+  test("finishing onboarding leaves day one's hold to the user", async () => {
     onboard();
-    expect(S().lastHeldAt).toBe('2026-11-10');
-    expect(S().celebrateOnboarding).toBe(true);
+    expect(S().lastHeldAt).toBeNull();
+    expect(S().arrivedFromOnboarding).toBe(true);
     await flush();
-    // a runtime cue, never written to disk — a relaunch must not replay it
-    expect((await saved()).state).not.toHaveProperty('celebrateOnboarding');
-    S().clearCelebration();
-    expect(S().celebrateOnboarding).toBe(false);
+    // a runtime cue, never written to disk
+    expect((await saved()).state).not.toHaveProperty('arrivedFromOnboarding');
+    S().markHeld();
+    S().clearArrival();
+    expect(S().lastHeldAt).toBe('2026-11-10');
+    expect(S().arrivedFromOnboarding).toBe(false);
   });
 
   test('the default habit is the ~$120/month moderate smoker', () => {

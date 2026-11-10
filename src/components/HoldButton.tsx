@@ -30,6 +30,8 @@ type Props = {
   onComplete: () => void;
   /** the companion's name, for the label */
   companionName: string;
+  /** no hold has ever been logged — this one starts the journey */
+  firstHold?: boolean;
 };
 
 /** Haptic ticks while charging — accelerating, so the press feels like it's winding up. */
@@ -51,7 +53,7 @@ const A11Y_ACTIONS = [{name: 'activate' as const}];
  * Everything here animates with transforms only — no per-frame width changes —
  * so the sweep never triggers layout on either platform.
  */
-export default function HoldButton({onComplete, companionName}: Props) {
+export default function HoldButton({onComplete, companionName, firstHold = false}: Props) {
   const m = useMetrics();
   const {wake, charge, pressing, celebrate, awake, active, start, abandon, complete} = useWake();
 
@@ -140,7 +142,11 @@ export default function HoldButton({onComplete, companionName}: Props) {
     finish();
   };
 
-  const label = awake ? `${companionName} is awake` : `Hold to wake ${companionName}`;
+  const label = awake
+    ? `${companionName} is awake`
+    : firstHold
+      ? 'Hold to begin'
+      : `Hold to wake ${companionName}`;
 
   /** Warm halo behind the bar — only while dormant and not being pressed. */
   const haloStyle = useAnimatedStyle(() => {
@@ -210,7 +216,9 @@ export default function HoldButton({onComplete, companionName}: Props) {
           onPressOut={pressOut}
           accessibilityRole="button"
           accessibilityLabel={label}
-          accessibilityHint={awake ? undefined : 'Logs today as a clean day'}
+          accessibilityHint={
+            awake ? undefined : firstHold ? 'Starts day one' : 'Logs today as a clean day'
+          }
           accessibilityState={{disabled: awake}}
           accessibilityActions={A11Y_ACTIONS}
           onAccessibilityAction={onAccessibilityAction}
