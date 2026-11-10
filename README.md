@@ -112,19 +112,51 @@ stacked and cross-faded rather than restyled, so every frame stays on the
 compositor and the reference artwork is never redrawn. Haptics are native-only
 (`haptic()` is a no-op on web); the visuals are identical on both.
 
-### Streak vs. lifetime days (by design)
+### Local-first persistence (`src/store/`, `src/lib/`)
 
-The engine tracks **two separate values** (`src/lib/streak.ts`):
+Everything lives on the device — no account, no backend. The Zustand store is
+persisted to **AsyncStorage** (localStorage on web) and rehydrated on launch;
+the app shows a splash until that read finishes, then routes a **first launch**
+(nothing stored) to onboarding and a **returning user** straight home.
 
-- **Current streak** — consecutive clean days since `streakStart`; this is what
-  a slip can break.
-- **Lifetime clean days** — `bankedDays + currentStreak`; **drives rank and
-  savings** and is *never* reduced by a slip.
+What is stored — only the user's own inputs and events; every number on screen
+is derived from them, so nothing can drift out of sync:
 
-So a slip (start-over) banks the current streak into lifetime, then resets the
-streak to day 1 — your rank, unlocked companions, and savings stay intact. A
-"restore" keeps the streak entirely (2 free restores). See `src/lib/ranks.ts`
-for the 9-rank / 9-companion ladder keyed off lifetime days.
+| Stored | Derived from it |
+|---|---|
+| habit: type, amount/day, price per pack, units per pack | spend, money saved, amount avoided, packs |
+| quit date, current streak start, banked days | current streak, lifetime clean days |
+| lifetime high-water mark | rank, unlocked companions (can't be lost to a clock change) |
+| slip ledger (restore / reset, with date) | free restores left this month |
+| last-held day, journal (one entry per day) | "held today", insights, check-in streak |
+| equipped companion, onboarding-complete flag | — |
+
+**Rules (each covered by a test in `__tests__/`):**
+- **Dates are calendar-day keys** (`2026-11-10`), never timestamps, and day
+  arithmetic is done on the calendar — so travel and daylight saving can't
+  shift a streak. `npm run test:tz` runs the suite in five timezones.
+- **Streak and lifetime are separate.** A logged slip (start over) banks the
+  current streak into lifetime and restarts it today; lifetime, rank, savings
+  and companions never go down.
+- **A missed day doesn't break the streak** — not opening the app isn't a
+  slip. (It does break the separate check-in streak.)
+- **Free restores: 2 per calendar month**, counted from the ledger, so they
+  reset on the 1st with no write needed.
+- **Midnight / resume:** `src/lib/clock.ts` advances the store's `today` at
+  local midnight and when the app returns to the foreground.
+
+**Schema changes:** the persisted data carries a version (`STORE_VERSION`).
+Changing its shape means bumping the version and adding a step to
+`migrateState` — earlier data (v0, from before onboarding collected real
+inputs) is upgraded in place, keeping the user's exact savings. On load every
+field is also validated individually, so partial or corrupt data falls back
+per field instead of crashing.
+
+**Reinstall on the same device:** the data is included in normal device
+backups — Android Auto Backup (`android:allowBackup` + `res/xml/*backup*` rules
+for AsyncStorage's `RKStorage` database) and iCloud
+(`RCTAsyncStorageExcludeFromBackup = false` in `Info.plist`; AsyncStorage
+excludes itself by default). Restoring the backup restores the app's state.
 
 ## Stubs
 

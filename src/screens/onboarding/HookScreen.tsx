@@ -48,7 +48,7 @@ export default function HookScreen() {
         {/* ---- THE ONE FLEX GAP ---- */}
         <View style={styles.flexGap} />
 
-        <Button label="Start" onPress={() => nav.navigate('Maths')} />
+        <Button label="Start" onPress={() => nav.navigate('Habit')} />
         <View style={{height: m.h(0.035)}} />
       </View>
     </Screen>

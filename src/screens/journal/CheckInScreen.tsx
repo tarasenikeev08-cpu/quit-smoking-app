@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 
@@ -9,6 +9,7 @@ import {colors} from '@/theme';
 import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
 import {TRIGGERS, Trigger} from '@/lib/journal';
+import {useCheckInStreak, useTodayEntry} from '@/store/selectors';
 
 const CRAVING_STEPS = [1, 2, 3, 4, 5];
 const MOODS: MoodValue[] = [1, 2, 3, 4, 5];
@@ -23,21 +24,26 @@ export default function CheckInScreen() {
   const m = useMetrics();
   const T = m.type;
   const logEntry = useStore(s => s.logEntry);
+  const todayEntry = useTodayEntry();
+  const checkIns = useCheckInStreak();
 
   const [craving, setCraving] = useState(3);
   const [triggers, setTriggers] = useState<Trigger[]>([]);
   const [mood, setMood] = useState<MoodValue>(3);
+
+  // One check-in per day. If today's exists, the form shows it so it can be
+  // adjusted (saving updates it); on a new day the form starts fresh.
+  useEffect(() => {
+    setCraving(todayEntry?.craving ?? 3);
+    setTriggers(todayEntry?.triggers ?? []);
+    setMood(((todayEntry?.mood ?? 3) as MoodValue));
+  }, [todayEntry]);
 
   const toggle = (t: Trigger) =>
     setTriggers(prev => (prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]));
 
   const save = () => {
     logEntry({craving, triggers, mood});
-    // Clear the form: Patterns is pushed on top of this screen, so coming back
-    // would otherwise show the entry just saved, ready to be saved twice.
-    setCraving(3);
-    setTriggers([]);
-    setMood(3);
     nav.navigate('Patterns');
   };
 
@@ -52,7 +58,13 @@ export default function CheckInScreen() {
             <Text style={[T.body, {color: colors.muted}]}>Skip</Text>
           </Pressable>
         </View>
-        <Text style={[T.caption, {color: colors.muted}]}>15 seconds. Builds your pattern.</Text>
+        <Text style={[T.caption, {color: colors.muted}]}>
+          {todayEntry
+            ? `Checked in today · ${checkIns}-day check-in streak`
+            : checkIns > 0
+              ? `${checkIns}-day check-in streak — keep it going.`
+              : '15 seconds. Builds your pattern.'}
+        </Text>
       </View>
 
       <View style={{height: m.h(0.04)}} />
@@ -121,7 +133,7 @@ export default function CheckInScreen() {
       {/* ---- THE ONE FLEX GAP ---- */}
       <View style={styles.flexGap} />
 
-      <Button label="Save" onPress={save} />
+      <Button label={todayEntry ? 'Update' : 'Save'} onPress={save} />
       <View style={{height: m.h(0.03)}} />
     </Screen>
   );

@@ -12,6 +12,7 @@
     "preweb:build": "node scripts/ensure-deps.js",
     "web:build": "webpack --config webpack.config.js",
     "test": "jest",
+    "test:tz": "for tz in UTC Pacific/Auckland America/Los_Angeles Asia/Kolkata Pacific/Kiritimati; do echo \"TZ=$tz\"; TZ=$tz jest --silent || exit 1; done",
     "typecheck": "tsc --noEmit",
     "postinstall": "patch-package"
   },

@@ -9,6 +9,7 @@ import {colors, radius} from '@/theme';
 import {useMetrics} from '@/theme/metrics';
 import {useRank, useStreakDays, useLifetimeDays, useSavings} from '@/store/selectors';
 import {RANKS} from '@/lib/ranks';
+import {formatMoney} from '@/lib/savings';
 import {companionNameForRank} from '@/lib/companions';
 
 /**
@@ -22,7 +23,7 @@ export default function RankScreen() {
   const {current, next, progress, daysToNext} = useRank();
   const streak = useStreakDays();
   const lifetime = useLifetimeDays();
-  const {saved, packs, habit} = useSavings();
+  const {saved, packs, habit, spec} = useSavings();
   const currentIndex = RANKS.findIndex(r => r.key === current.key);
   const m = useMetrics();
   const T = m.type;
@@ -45,10 +46,9 @@ export default function RankScreen() {
       <View style={[styles.savedCard, {height: m.h(0.21)}]}>
         <Text style={[T.label, {color: colors.muted}]}>Saved so far</Text>
         <Text style={[T.dayCount, styles.savedV, {color: colors.ink}]}>
-          {habit.currencySymbol}
-          {saved}
+          {formatMoney(habit, saved)}
         </Text>
-        <Text style={[T.caption, {color: colors.muted}]}>≈ {packs} packs not bought</Text>
+        <Text style={[T.caption, {color: colors.muted}]}>≈ {packs} {packs === 1 ? spec.pack.one : spec.pack.many} not bought</Text>
       </View>
 
       <View style={{height: m.h(0.015)}} />

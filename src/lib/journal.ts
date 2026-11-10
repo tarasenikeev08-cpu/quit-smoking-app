@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import {DayKey, addDays} from './days';
 
 export const TRIGGERS = [
   'Stress',
@@ -12,7 +13,13 @@ export type Trigger = (typeof TRIGGERS)[number];
 
 export type JournalEntry = {
   id: string;
-  /** ISO timestamp of the check-in */
+  /**
+   * The local calendar day this check-in is for. One entry per day: checking
+   * in again the same day updates it. Stored as a day key, so travelling
+   * across timezones never moves an entry to a different day.
+   */
+  day: DayKey;
+  /** ISO timestamp of the (latest) check-in — only used for time-of-day insights */
   createdAt: string;
   /** craving strength 1..5 */
   craving: number;
@@ -109,4 +116,20 @@ export function computeInsights(entries: JournalEntry[]): Insights {
     peakLabel: peak >= 0 ? BUCKET_NAMES[peak] : null,
     alcoholMultiplier: mult,
   };
+}
+
+/**
+ * The journal-log streak: consecutive days with a check-in, ending today — or
+ * yesterday, if today's check-in hasn't happened yet (the streak isn't broken
+ * until a whole day is missed).
+ */
+export function checkInStreak(entries: JournalEntry[], today: DayKey): number {
+  const days = new Set(entries.map(e => e.day));
+  let cursor = days.has(today) ? today : addDays(today, -1);
+  let n = 0;
+  while (days.has(cursor)) {
+    n += 1;
+    cursor = addDays(cursor, -1);
+  }
+  return n;
 }

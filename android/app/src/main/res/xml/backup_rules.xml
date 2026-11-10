@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Auto Backup rules for Android 6–11 (android:fullBackupContent).
+  The app is local-first: everything lives in AsyncStorage's SQLite database
+  "RKStorage". Including it here is what lets a reinstall on the same device
+  (or a new phone restored from backup) bring back the streak, journal and
+  settings. Only that database is backed up.
+-->
+<full-backup-content>
+    <include domain="database" path="RKStorage" />
+</full-backup-content>

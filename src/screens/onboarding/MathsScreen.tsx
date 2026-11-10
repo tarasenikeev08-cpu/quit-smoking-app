@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -8,12 +8,10 @@ import {Button} from '@/components/ui';
 import {colors, radius} from '@/theme';
 import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
-import {DEFAULT_HABIT} from '@/lib/savings';
+import {HABITS, formatAmount, formatMoney, monthlySpend} from '@/lib/savings';
 import type {OnboardingParamList} from '@/navigation/types';
 
 const APP_PRICE = 5;
-const STEP = 10;
-const MAX_SPEND = 2000;
 
 /**
  * ONBOARDING — THE MATHS, per Ember_Proportions.md.
@@ -66,48 +64,44 @@ function Bar({
 
 export default function MathsScreen() {
   const nav = useNavigation<NativeStackNavigationProp<OnboardingParamList>>();
-  const setHabit = useStore(s => s.setHabit);
+  const habit = useStore(s => s.habit);
   const m = useMetrics();
   const T = m.type;
-  const [spend, setSpend] = useState(DEFAULT_HABIT.monthlySpend);
+  const spec = HABITS[habit.type];
 
+  // the real figure, from what the user just told us
+  const spend = Math.round(monthlySpend(habit));
+  const spendLabel = formatMoney(habit, spend);
   const times = Math.max(1, Math.round(spend / APP_PRICE));
   const barH = m.h(0.065);
-  const stepSize = m.h(0.055);
   // the app bar is the same bar, scaled to its share of the bigger number
-  const appPct = Math.max(4, Math.min(100, (APP_PRICE / spend) * 100));
-
-  const next = () => {
-    setHabit(spend);
-    nav.navigate('Paywall');
-  };
+  const appPct = Math.max(4, Math.min(100, (APP_PRICE / Math.max(spend, 1)) * 100));
 
   return (
     <Screen>
       <View style={[styles.wrap, {paddingHorizontal: m.gutter, paddingTop: m.band.header}]}>
         <View style={[styles.headlineBand, {height: m.h(0.14)}]}>
           <Text style={[T.h2, styles.headline, {color: colors.ink, lineHeight: Math.round(T.h2.fontSize * 1.3)}]}>
-            You spend about <Text style={styles.underline}>${spend}</Text> a month on cigarettes.
+            You spend about <Text style={styles.underline}>{spendLabel}</Text> a month on{' '}
+            {spec.spendNoun}.
           </Text>
         </View>
 
         <View style={{height: m.h(0.035)}} />
 
+        {/* what that figure is built from — tap to change it */}
         <View style={[styles.stepper, {height: m.h(0.1)}]}>
+          <Text style={[T.body, styles.summaryTxt, {color: colors.ink}]} numberOfLines={2}>
+            {formatAmount(habit.amountPerDay)} {spec.unit.many} a day ·{' '}
+            {formatMoney(habit, habit.pricePerPack, true)} per {spec.pack.one} of{' '}
+            {habit.unitsPerPack}
+          </Text>
           <Pressable
+            onPress={() => nav.popTo('Habit')}
+            hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel="Spend less"
-            style={[styles.stepBtn, {height: stepSize, width: stepSize, borderRadius: stepSize / 2}]}
-            onPress={() => setSpend(s => Math.max(STEP, s - STEP))}>
-            <Text style={[T.h2, {color: colors.ink}]}>−</Text>
-          </Pressable>
-          <Text style={[T.body, {fontWeight: '500', color: colors.ink}]}>${spend}/mo</Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Spend more"
-            style={[styles.stepBtn, {height: stepSize, width: stepSize, borderRadius: stepSize / 2}]}
-            onPress={() => setSpend(s => Math.min(MAX_SPEND, s + STEP))}>
-            <Text style={[T.h2, {color: colors.ink}]}>+</Text>
+            accessibilityLabel="Edit what you spend">
+            <Text style={[T.caption, styles.edit]}>Edit</Text>
           </Pressable>
         </View>
 
@@ -117,8 +111,8 @@ export default function MathsScreen() {
             so only the LENGTH differs */}
         <View style={[styles.comparison, {height: m.h(0.23)}]}>
           <Bar
-            label="Cigarettes / mo"
-            value={`${'$'}${spend}`}
+            label={spec.barLabel}
+            value={spendLabel}
             pct={100}
             color={colors.ink}
             valueColor={colors.onInk}
@@ -127,7 +121,7 @@ export default function MathsScreen() {
           />
           <Bar
             label="This app / mo"
-            value={`${'$'}${APP_PRICE}`}
+            value={formatMoney(habit, APP_PRICE)}
             pct={appPct}
             color={colors.accent}
             valueColor={colors.ink}
@@ -147,7 +141,7 @@ export default function MathsScreen() {
         {/* ---- THE ONE FLEX GAP ---- */}
         <View style={styles.flexGap} />
 
-        <Button label="Continue" onPress={next} />
+        <Button label="Continue" onPress={() => nav.navigate('Paywall')} />
         <View style={{height: m.h(0.035)}} />
       </View>
     </Screen>
@@ -172,7 +166,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     paddingHorizontal: 10,
   },
-  stepBtn: {backgroundColor: colors.pill, alignItems: 'center', justifyContent: 'center'},
+  summaryTxt: {flex: 1, fontWeight: '500', paddingHorizontal: 8},
+  edit: {color: colors.ink, textDecorationLine: 'underline', paddingHorizontal: 8},
 
   comparison: {justifyContent: 'space-evenly'},
   barGroup: {},

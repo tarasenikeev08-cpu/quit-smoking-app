@@ -9,7 +9,8 @@ import {Button} from '@/components/ui';
 import {colors, radius} from '@/theme';
 import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
-import {useStreakDays, useSavings} from '@/store/selectors';
+import {useStreakDays, useSavings, useRestoresLeft} from '@/store/selectors';
+import {formatMoney} from '@/lib/savings';
 
 /**
  * SLIP / RECOVERY, per Ember_Proportions.md.
@@ -23,7 +24,7 @@ export default function SlipScreen() {
   const m = useMetrics();
   const T = m.type;
   const {saved, habit} = useSavings();
-  const restoresLeft = useStore(s => s.streak.restoresLeft);
+  const restoresLeft = useRestoresLeft();
   const spendRestore = useStore(s => s.spendRestore);
   const startOver = useStore(s => s.startOver);
 
@@ -105,8 +106,7 @@ export default function SlipScreen() {
           <View style={[styles.chip, {height: m.controls.chip.height, borderRadius: m.controls.chip.radius}]}>
             <Icon name="coins" size={12} />
             <Text style={[T.caption, {color: colors.ink}]}>
-              {habit.currencySymbol}
-              {saved} saved
+              {formatMoney(habit, saved)} saved
             </Text>
           </View>
         </View>
@@ -121,7 +121,7 @@ export default function SlipScreen() {
             </Text>
           </View>
           <View style={styles.restoreTag}>
-            <Text style={[T.caption, {color: colors.ink}]}>{restoresLeft} free left</Text>
+            <Text style={[T.caption, {color: colors.ink}]}>{restoresLeft} free left this month</Text>
           </View>
         </View>
 

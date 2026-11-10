@@ -20,7 +20,15 @@ import {Stat} from '@/components/ui';
 import {colors, controls as fixed} from '@/theme';
 import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
-import {useStreakDays, useRank, useSavings, useHeldToday} from '@/store/selectors';
+import {
+  useStreakDays,
+  useStreakStart,
+  useRank,
+  useSavings,
+  useHeldToday,
+} from '@/store/selectors';
+import {formatMoney} from '@/lib/savings';
+import {formatDay} from '@/lib/days';
 import {companionName} from '@/lib/companions';
 import {SPRING_HOP, EASE_OUT} from '@/anim/config';
 import {WakeProvider, useWakeEngine} from '@/anim/wake';
@@ -66,7 +74,9 @@ export default function HomeScreen() {
 function HomeContent() {
   const streak = useStreakDays();
   const {current} = useRank();
-  const {saved, avoided, habit} = useSavings();
+  const {saved, avoided, habit, spec} = useSavings();
+  const streakStart = useStreakStart();
+  const today = useStore(s => s.today);
   const equipped = useStore(s => s.equipped);
   const markHeld = useStore(s => s.markHeld);
   const nav = useNavigation<any>();
@@ -136,7 +146,10 @@ function HomeContent() {
               <Embers size={flameSize} spread={m.type.dayCount.fontSize * 2.6} />
             </View>
           </Animated.View>
-          <Text style={[m.type.label, {color: colors.muted, marginTop: 4}]}>Days clean</Text>
+          {/* the count runs from the user's real quit date (or last restart) */}
+          <Text style={[m.type.label, styles.countLabel]}>
+            {streakStart >= today ? 'Day one · starting today' : `Days clean · since ${formatDay(streakStart, today)}`}
+          </Text>
         </View>
 
         {/* ---- THE ONE FLEX GAP ---- */}
@@ -144,8 +157,16 @@ function HomeContent() {
 
         {/* stat row 11% */}
         <View style={[styles.statRow, {height: m.band.statRow, gap: m.statGap}]}>
-          <Stat k="Saved" v={`${habit.currencySymbol}${saved}`} />
-          <Stat k="Avoided" v={avoided} />
+          <Stat k="Saved" v={formatMoney(habit, saved)} />
+          <Stat
+            k="Avoided"
+            v={
+              <Text style={[m.type.statValue, {color: colors.ink}]}>
+                {avoided.toLocaleString('en-US')}
+                <Text style={[m.type.caption, {color: colors.muted}]}> {spec.unit.short}</Text>
+              </Text>
+            }
+          />
         </View>
 
         {/* gap 3% */}
@@ -166,6 +187,7 @@ const styles = StyleSheet.create({
   header: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'},
   centered: {alignItems: 'center', justifyContent: 'center'},
   countRow: {flexDirection: 'row', alignItems: 'center', gap: 8},
+  countLabel: {color: colors.muted, marginTop: 4},
   flexGap: {flex: 1},
   statRow: {flexDirection: 'row'},
 });
