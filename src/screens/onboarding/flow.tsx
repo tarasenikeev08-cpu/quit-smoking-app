@@ -84,6 +84,11 @@ const useFlow = () => {
 };
 
 export function OnboardingFlowProvider({children}: {children: React.ReactNode}) {
+  // a fresh onboarding (first launch, or after "delete my data") starts at the hook
+  useState(() => {
+    lastRoute.current = 'Hook';
+    return null;
+  });
   const [state, setState] = useState<{
     route: OnboardingRoute;
     direction: 1 | -1;

@@ -140,14 +140,23 @@ function HomeContent() {
           <Text style={[m.type.label, {color: colors.ink}]}>
             {current.name.toUpperCase()}
           </Text>
-          {/* the box was decorative but read as a button — make it one */}
-          <Pressable
-            onPress={() => nav.navigate('Collection')}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Open collection">
-            <Icon name="box" size={fixed.headerIcon} />
-          </Pressable>
+          <View style={styles.headerIcons}>
+            <Pressable
+              onPress={() => nav.navigate('Settings')}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Settings">
+              <Icon name="settings" size={fixed.headerIcon} />
+            </Pressable>
+            {/* the box was decorative but read as a button — make it one */}
+            <Pressable
+              onPress={() => nav.navigate('Collection')}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Open collection">
+              <Icon name="box" size={fixed.headerIcon} />
+            </Pressable>
+          </View>
         </View>
 
         {/* gap 4% */}
@@ -216,6 +225,7 @@ const styles = StyleSheet.create({
   fill: {flex: 1},
   wrap: {flex: 1},
   header: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'},
+  headerIcons: {flexDirection: 'row', alignItems: 'center', gap: 20},
   centered: {alignItems: 'center', justifyContent: 'center'},
   countRow: {flexDirection: 'row', alignItems: 'center', gap: 8},
   countLabel: {color: colors.muted, marginTop: 4},

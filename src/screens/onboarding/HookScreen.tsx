@@ -6,6 +6,7 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import Screen from '@/components/Screen';
 import Flame from '@/components/Flame';
 import {Button} from '@/components/ui';
+import LegalLinks from '@/components/LegalLinks';
 import {colors} from '@/theme';
 import {useMetrics} from '@/theme/metrics';
 import type {OnboardingParamList} from '@/navigation/types';
@@ -13,7 +14,7 @@ import type {OnboardingParamList} from '@/navigation/types';
 /**
  * ONBOARDING — HOOK, per Ember_Proportions.md.
  * top 6.5% · flame hero 40% · gap 3% · title 15% · gap 1.5% · sub 8% ·
- * [THE ONE FLEX GAP] · Start 6.2% · bottom 3.5%
+ * [THE ONE FLEX GAP] · Start 6.2% · legal links 5%
  */
 export default function HookScreen() {
   const nav = useNavigation<NativeStackNavigationProp<OnboardingParamList>>();
@@ -49,7 +50,10 @@ export default function HookScreen() {
         <View style={styles.flexGap} />
 
         <Button label="Start" onPress={() => nav.navigate('Quitting')} />
-        <View style={{height: m.h(0.035)}} />
+        {/* legal footer: 5% band, taken from the flex gap */}
+        <View style={[styles.legal, {height: m.h(0.05)}]}>
+          <LegalLinks />
+        </View>
       </View>
     </Screen>
   );
@@ -63,4 +67,5 @@ const styles = StyleSheet.create({
   subBand: {justifyContent: 'flex-start'},
   sub: {textAlign: 'center', paddingHorizontal: 24},
   flexGap: {flex: 1},
+  legal: {justifyContent: 'center'},
 });

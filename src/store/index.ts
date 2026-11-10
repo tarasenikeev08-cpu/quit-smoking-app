@@ -101,6 +101,12 @@ export type AppState = {
   markHeld: () => void;
   setPremium: (v: boolean) => void;
   resetAll: () => void;
+  /**
+   * "Delete my data": erase everything this app has stored on the device and
+   * return to a fresh, un-onboarded state. Permanent — v1 has no account and
+   * no cloud copy, so the device's copy is the only one.
+   */
+  deleteAllData: () => Promise<void>;
 };
 
 type PersistedState = Omit<
@@ -121,6 +127,7 @@ type PersistedState = Omit<
   | 'markHeld'
   | 'setPremium'
   | 'resetAll'
+  | 'deleteAllData'
 >;
 
 const freshData = (today: DayKey): PersistedState => ({
@@ -430,6 +437,15 @@ export const useStore = create<AppState>()(
       resetAll: () => {
         const d = todayKey();
         set({today: d, arrivedFromOnboarding: false, ...freshData(d)});
+      },
+
+      deleteAllData: async () => {
+        // Reset memory first (this also re-writes fresh defaults), then wipe
+        // the device storage itself — every key the app owns, not just ours —
+        // so nothing of the old data remains on disk.
+        get().resetAll();
+        await useStore.persist.clearStorage();
+        await AsyncStorage.clear();
       },
     }),
     {

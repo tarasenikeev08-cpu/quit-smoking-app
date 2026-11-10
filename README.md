@@ -158,6 +158,33 @@ for AsyncStorage's `RKStorage` database) and iCloud
 (`RCTAsyncStorageExcludeFromBackup = false` in `Info.plist`; AsyncStorage
 excludes itself by default). Restoring the backup restores the app's state.
 
+## Legal & data handling
+
+**Legal documents.** Settings → Privacy Policy / Medical Disclaimer / Terms of
+Service, also linked from the onboarding hook and the paywall footer. They are
+rendered from `Ember_Legal_Pack.md` (repo root), bundled at build time by
+`scripts/build-legal.js` into `src/legal/pack.generated.ts`; each document is
+the section under a `#`/`##` heading naming it. **Until that file is added the
+app shows marked placeholder text** and `npm run check:legal` fails — run it
+before every submission.
+
+**Delete my data.** Settings → Delete my data (with confirmation) resets the
+store and clears all of the app's AsyncStorage, then returns to a fresh
+onboarding. v1 has no account or server copy, so this is complete deletion.
+
+**Data-handling audit (R1–R8)** — last run against this build:
+
+| # | Check | Result |
+|---|---|---|
+| R1 | No analytics / telemetry / crash-reporting SDKs | PASS |
+| R2 | No advertising SDKs or ad networks | PASS |
+| R3 | No IDFA / App Tracking Transparency; no Android `AD_ID` | PASS |
+| R4 | No third-party data sharing | PASS |
+| R5 | No network calls carrying user data | PASS (release no longer requests `INTERNET`) |
+| R6 | iOS privacy manifest accurate (no tracking, no collected data, reasons declared) | PASS |
+| R7 | Data stays on device; user can delete it | PASS |
+| R8 | Privacy Policy / Terms / Medical Disclaimer in app and linked | BLOCKED — placeholder until `Ember_Legal_Pack.md` is added |
+
 ## Stubs
 
 Both are isolated, clearly marked, and safe to run — the UI treats them as if

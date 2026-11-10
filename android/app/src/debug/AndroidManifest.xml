@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug builds only: INTERNET is needed to load the JS bundle from the Metro
+  dev server. Release builds make no network calls at all, so they don't
+  request the permission (see the R5 data-handling audit in README).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>

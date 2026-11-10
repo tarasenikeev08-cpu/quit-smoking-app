@@ -145,6 +145,26 @@ describe('persistence', () => {
   });
 });
 
+describe('delete my data', () => {
+  test('erases storage and memory, back to a fresh onboarding', async () => {
+    onboard();
+    S().markHeld();
+    S().logEntry({craving: 4, triggers: ['Coffee'], mood: 2});
+    await AsyncStorage.setItem('some-other-key', 'x');
+    await flush();
+    await S().deleteAllData();
+    expect(S().onboarded).toBe(false);
+    expect(S().journal).toEqual([]);
+    expect(S().lastHeldAt).toBeNull();
+    expect(S().quitDate).toBeNull();
+    expect(await AsyncStorage.getItem('some-other-key')).toBeNull();
+    // and a restart finds nothing to bring back
+    await restart();
+    expect(S().onboarded).toBe(false);
+    expect(S().journal).toEqual([]);
+  });
+});
+
 describe('migration from v0 (the earlier shape)', () => {
   const v0 = {
     onboarded: true,

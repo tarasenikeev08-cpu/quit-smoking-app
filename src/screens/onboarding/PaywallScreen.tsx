@@ -4,6 +4,7 @@ import {useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
 import Flame from '@/components/Flame';
+import LegalLinks from '@/components/LegalLinks';
 import {colors, radius} from '@/theme';
 import {useMetrics} from '@/theme/metrics';
 import {useStore} from '@/store';
@@ -12,7 +13,7 @@ import {getOffering, purchase, restore, MockPlan} from '@/services/purchases';
 /**
  * PAYWALL, per Ember_Proportions.md.
  * top 6.5% · flame hero 24% · headline 14% · gap 4% · plan card 15% ·
- * fine print 5.5% · [THE ONE FLEX GAP] · CTA 6.2% · links 6% · bottom 3%
+ * fine print 5.5% · [THE ONE FLEX GAP] · CTA 6.2% · links 6% · legal 4% · bottom 2%
  */
 export default function PaywallScreen() {
   const nav = useNavigation<any>();
@@ -143,7 +144,11 @@ export default function PaywallScreen() {
             <Text style={[T.caption, {color: colors.mutedOnInk}]}>Maybe later</Text>
           </Pressable>
         </View>
-        <View style={{height: m.h(0.03)}} />
+        {/* App Store: subscription screens must link the Terms and Privacy Policy */}
+        <View style={[styles.legal, {height: m.h(0.04)}]}>
+          <LegalLinks dark />
+        </View>
+        <View style={{height: m.h(0.02)}} />
       </View>
     </SafeAreaView>
   );
@@ -185,5 +190,6 @@ const styles = StyleSheet.create({
 
   flexGap: {flex: 1},
   cta: {backgroundColor: colors.paper, alignItems: 'center', justifyContent: 'center'},
+  legal: {justifyContent: 'center'},
   footerLinks: {flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 32},
 });

@@ -7,6 +7,8 @@ import OnboardingNavigator from './OnboardingNavigator';
 import TabNavigator from './TabNavigator';
 import SlipScreen from '@/screens/slip/SlipScreen';
 import PaywallScreen from '@/screens/onboarding/PaywallScreen';
+import SettingsScreen from '@/screens/settings/SettingsScreen';
+import LegalScreen from '@/screens/settings/LegalScreen';
 import {useStore} from '@/store';
 import {useDayClock} from '@/lib/clock';
 import {colors} from '@/theme';
@@ -50,8 +52,13 @@ export default function RootNavigator() {
               component={PaywallScreen}
               options={{presentation: 'modal'}}
             />
+            {/* only while onboarded: deleting your data unmounts it and the
+                navigator falls straight back to a fresh onboarding */}
+            <Stack.Screen name="Settings" component={SettingsScreen} />
           </Stack.Group>
         )}
+        {/* legal docs are reachable from onboarding and paywall footers too */}
+        <Stack.Screen name="Legal" component={LegalScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

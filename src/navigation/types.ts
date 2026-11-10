@@ -1,4 +1,5 @@
 import type {NavigatorScreenParams} from '@react-navigation/native';
+import type {LegalDocId} from '@/legal';
 
 export type OnboardingParamList = {
   Hook: undefined;
@@ -26,4 +27,7 @@ export type RootParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
   Slip: undefined;
   Paywall: undefined; // reachable from in-app upsell
+  Settings: undefined;
+  /** a legal document; reachable during onboarding too */
+  Legal: {doc: LegalDocId};
 };
