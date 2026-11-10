@@ -1,17 +1,17 @@
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import {StyleSheet, Text, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import dayjs from 'dayjs';
 
-import Screen from '@/components/Screen';
 import Stepper from '@/components/Stepper';
-import {Button, Pill} from '@/components/ui';
+import {Pill} from '@/components/ui';
 import {colors} from '@/theme';
 import {useMetrics} from '@/theme/metrics';
 import {useStore, MAX_QUIT_DAYS_AGO} from '@/store';
 import {addDays, dayDiff, relativeDay} from '@/lib/days';
 import type {OnboardingParamList} from '@/navigation/types';
+import {OnboardingStep} from './flow';
 
 const PRESETS: {label: string; daysAgo: number}[] = [
   {label: 'Today', daysAgo: 0},
@@ -21,11 +21,9 @@ const PRESETS: {label: string; daysAgo: number}[] = [
 ];
 
 /**
- * ONBOARDING — QUIT DATE. The streak, lifetime days and savings all count
- * from the day chosen here.
- *
- * top 6.5% · headline 12% · gap 4% · date 28% · gap 4% · presets 6% ·
- * gap 3% · note 9% · [THE ONE FLEX GAP] · Continue 6.2% · bottom 3.5%
+ * STEP 3 — QUIT DATE. The streak, lifetime days and savings count from here.
+ * frame: header 6.5 · companion 15 · headline 11 · sub 5 ·
+ * gap 3 · date 16 · gap 3 · presets 6 · gap 2 · note 5 · [FLEX] · button 6.2 · bottom 3.5
  */
 export default function QuitDateScreen() {
   const nav = useNavigation<NativeStackNavigationProp<OnboardingParamList>>();
@@ -49,74 +47,64 @@ export default function QuitDateScreen() {
   const big = dayjs(day).format('ddd D MMM');
   const yearNote = day.slice(0, 4) !== today.slice(0, 4) ? ` · ${day.slice(0, 4)}` : '';
 
-  const next = () => {
-    setQuitDate(day); // commit "today" explicitly if nothing was picked
-    nav.navigate('Maths');
-  };
-
   return (
-    <Screen>
-      <View style={[styles.wrap, {paddingHorizontal: m.gutter, paddingTop: m.band.header}]}>
-        <View style={[styles.headlineBand, {height: m.h(0.12)}]}>
-          <Text style={[T.h2, {color: colors.ink}]}>When did you quit?</Text>
-          <Text style={[T.body, {color: colors.muted, marginTop: 6}]}>
-            Your streak and savings count from this day.
-          </Text>
-        </View>
+    <OnboardingStep
+      headline="When did you quit?"
+      sub="Your count starts here."
+      cta="Continue"
+      onNext={() => {
+        setQuitDate(day); // commit "today" explicitly if nothing was picked
+        nav.navigate('Savings');
+      }}
+    >
+      <View style={{height: m.h(0.03)}} />
+      <Stepper
+        heightFraction={0.16}
+        value={big}
+        accessibilityLabel={`Quit date ${dayjs(day).format('dddd D MMMM YYYY')}, ${relativeDay(
+          day,
+          today,
+        )}`}
+        onDecrement={() => shift(-1)}
+        onIncrement={() => shift(1)}
+        canDecrement={ago < MAX_QUIT_DAYS_AGO}
+        canIncrement={ago > 0}
+      >
+        <Text style={[T.h1, {color: colors.ink}]}>{big}</Text>
+        <Text style={[T.caption, styles.relative]}>
+          {relativeDay(day, today)}
+          {yearNote}
+        </Text>
+      </Stepper>
 
-        <View style={{height: m.h(0.04)}} />
-
-        <Stepper
-          heightFraction={0.28}
-          value={big}
-          accessibilityLabel={`Quit date ${dayjs(day).format('dddd D MMMM YYYY')}, ${relativeDay(day, today)}`}
-          onDecrement={() => shift(-1)}
-          onIncrement={() => shift(1)}
-          canDecrement={ago < MAX_QUIT_DAYS_AGO}
-          canIncrement={ago > 0}>
-          <Text style={[T.h1, {color: colors.ink}]}>{big}</Text>
-          <Text style={[T.caption, {color: colors.muted, marginTop: 6}]}>
-            {relativeDay(day, today)}
-            {yearNote}
-          </Text>
-        </Stepper>
-
-        <View style={{height: m.h(0.04)}} />
-
-        <View style={[styles.presets, {height: m.h(0.06)}]}>
-          {PRESETS.map(p => (
-            <Pill
-              key={p.label}
-              label={p.label}
-              active={ago === p.daysAgo}
-              onPress={() => setQuitDate(addDays(today, -p.daysAgo))}
-            />
-          ))}
-        </View>
-
-        <View style={{height: m.h(0.03)}} />
-
-        <View style={[styles.noteBand, {height: m.h(0.09)}]}>
-          <Text style={[T.caption, styles.note, {color: colors.muted}]}>
-            Not quit yet? Choose today — your first clean day starts now.
-          </Text>
-        </View>
-
-        {/* ---- THE ONE FLEX GAP ---- */}
-        <View style={styles.flexGap} />
-
-        <Button label="Continue" onPress={next} />
-        <View style={{height: m.h(0.035)}} />
+      <View style={{height: m.h(0.03)}} />
+      <View style={[styles.presets, {height: m.h(0.06)}]}>
+        {PRESETS.map(p => (
+          <Pill
+            key={p.label}
+            label={p.label}
+            active={ago === p.daysAgo}
+            onPress={() => setQuitDate(addDays(today, -p.daysAgo))}
+          />
+        ))}
       </View>
-    </Screen>
+
+      <View style={{height: m.h(0.02)}} />
+      <View style={[styles.noteBand, {height: m.h(0.05)}]}>
+        <Text style={[T.caption, styles.note]}>Not yet? Pick today.</Text>
+      </View>
+    </OnboardingStep>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {flex: 1},
-  headlineBand: {justifyContent: 'center'},
-  presets: {flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap'},
-  noteBand: {justifyContent: 'flex-start'},
-  note: {textAlign: 'center', paddingHorizontal: 12},
-  flexGap: {flex: 1},
+  relative: {color: colors.muted, marginTop: 6},
+  presets: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  noteBand: {justifyContent: 'center'},
+  note: {color: colors.muted},
 });

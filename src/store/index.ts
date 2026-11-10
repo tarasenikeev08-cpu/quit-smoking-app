@@ -55,6 +55,11 @@ export type AppState = {
    * recompute when the day clock (src/lib/clock.ts) advances it.
    */
   today: DayKey;
+  /**
+   * Runtime only: set when onboarding has just finished, so Home plays the
+   * hand-off celebration once. Never persisted — a relaunch doesn't replay it.
+   */
+  celebrateOnboarding: boolean;
 
   onboarded: boolean;
   /** what the user quit and what it cost — entered in onboarding */
@@ -82,6 +87,8 @@ export type AppState = {
   setQuitDate: (day: DayKey) => void;
   /** last onboarding step: start the streak from the quit date */
   finishOnboarding: () => void;
+  /** Home has played the hand-off celebration */
+  clearCelebration: () => void;
   /** save today's check-in (replaces an earlier one from today) */
   logEntry: (e: {craving: number; triggers: Trigger[]; mood: number}) => void;
   /** slip, kept: spend one of this month's free restores */
@@ -99,6 +106,8 @@ type PersistedState = Omit<
   AppState,
   | 'hydrated'
   | 'today'
+  | 'celebrateOnboarding'
+  | 'clearCelebration'
   | 'syncToday'
   | 'setHabitType'
   | 'updateHabit'
@@ -305,6 +314,7 @@ export const useStore = create<AppState>()(
     (set, get) => ({
       hydrated: false,
       today: todayKey(),
+      celebrateOnboarding: false,
       ...freshData(todayKey()),
 
       syncToday: () => {
@@ -340,9 +350,14 @@ export const useStore = create<AppState>()(
           quitDate: start,
           streak: recordProgress(newStreak(start), d),
           ledger: [],
-          lastHeldAt: null,
+          // Finishing onboarding is the first commitment: it counts as today's
+          // hold, and Home opens on the companion waking up for it.
+          lastHeldAt: d,
+          celebrateOnboarding: true,
         });
       },
+
+      clearCelebration: () => set({celebrateOnboarding: false}),
 
       logEntry: e => {
         const d = todayKey();
@@ -413,7 +428,7 @@ export const useStore = create<AppState>()(
 
       resetAll: () => {
         const d = todayKey();
-        set({today: d, ...freshData(d)});
+        set({today: d, celebrateOnboarding: false, ...freshData(d)});
       },
     }),
     {

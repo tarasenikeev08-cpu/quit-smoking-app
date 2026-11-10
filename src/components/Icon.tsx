@@ -14,6 +14,7 @@ export type IconName =
   | 'coins'
   | 'flame'
   | 'chevronRight'
+  | 'chevronLeft'
   | 'close';
 
 type Props = {name: IconName; size?: number; color?: string; filled?: boolean};
@@ -97,6 +98,8 @@ function render(name: IconName, p: object, color: string) {
       );
     case 'chevronRight':
       return <Path d="M9 6l6 6-6 6" {...p} />;
+    case 'chevronLeft':
+      return <Path d="M15 6l-6 6 6 6" {...p} />;
     case 'close':
       return <Path d="M6 6l12 12M18 6L6 18" {...p} />;
     default:

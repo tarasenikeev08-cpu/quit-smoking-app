@@ -35,7 +35,8 @@ export const HABITS: Record<HabitType, HabitSpec> = {
     barLabel: 'Cigarettes / mo',
     amount: {default: 10, step: 1, min: 1, max: 80},
     perPack: {default: 20, step: 1, min: 1, max: 50},
-    price: {default: 12, step: 0.5, min: 0.5, max: 200},
+    // 10 a day at $8 a pack of 20 = $4/day, about $120 a month
+    price: {default: 8, step: 0.5, min: 0.5, max: 200},
   },
   rolling: {
     type: 'rolling',
@@ -46,7 +47,7 @@ export const HABITS: Record<HabitType, HabitSpec> = {
     barLabel: 'Tobacco / mo',
     amount: {default: 10, step: 1, min: 1, max: 80},
     perPack: {default: 50, step: 5, min: 5, max: 200},
-    price: {default: 30, step: 0.5, min: 0.5, max: 200},
+    price: {default: 20, step: 0.5, min: 0.5, max: 200},
   },
   vape: {
     type: 'vape',
@@ -141,3 +142,11 @@ export function formatMoney(h: Habit, amount: number, cents = false): string {
 /** "1", "0.5", "12.5" — amounts without trailing zeros. */
 export const formatAmount = (n: number): string =>
   Number.isInteger(n) ? String(n) : n.toFixed(1).replace(/\.0$/, '');
+
+/** "$8" for whole amounts, "$8.50" otherwise — prices as people say them. */
+export const formatPrice = (h: Habit, amount: number): string =>
+  formatMoney(h, amount, !Number.isInteger(amount));
+
+/** "cigarette" / "cigarettes" for an amount. */
+export const unitFor = (h: Habit, n: number): string =>
+  n === 1 ? HABITS[h.type].unit.one : HABITS[h.type].unit.many;

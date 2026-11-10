@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {AppState, Pressable, StyleSheet, Text, View} from 'react-native';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
 import Animated, {
@@ -30,8 +30,9 @@ import {
 import {formatMoney} from '@/lib/savings';
 import {formatDay} from '@/lib/days';
 import {companionName} from '@/lib/companions';
-import {SPRING_HOP, EASE_OUT} from '@/anim/config';
-import {WakeProvider, useWakeEngine} from '@/anim/wake';
+import {SPRING_HOP, EASE_OUT, ONBOARDING_HANDOFF_WAKE} from '@/anim/config';
+import {WakeProvider, useWake, useWakeEngine} from '@/anim/wake';
+import {haptic} from '@/lib/platform';
 
 /**
  * HOME — built to Ember_Proportions.md. Every band is a percentage of screen
@@ -79,20 +80,58 @@ function HomeContent() {
   const today = useStore(s => s.today);
   const equipped = useStore(s => s.equipped);
   const markHeld = useStore(s => s.markHeld);
+  const clearCelebration = useStore(s => s.clearCelebration);
+  const engine = useWake();
   const nav = useNavigation<any>();
   const m = useMetrics();
 
   // The streak number kicks with a spring overshoot the moment the hold lands,
   // riding the same beat as the companion's hop.
   const tick = useSharedValue(0);
-
-  const onHoldComplete = () => {
-    markHeld();
+  const kickCount = () => {
     tick.value = withSequence(
       withTiming(1, {duration: 140, easing: EASE_OUT}),
       withSpring(0, SPRING_HOP),
     );
   };
+
+  const onHoldComplete = () => {
+    markHeld();
+    kickCount();
+  };
+
+  /*
+   * Hand-off from onboarding — played once, straight after it finishes.
+   * The screen fades in with the companion exactly as awake as onboarding
+   * left it, then it finishes waking: hop, flame flare, ember burst, the
+   * count kicks, and a success haptic. Finishing onboarding already banked
+   * today's hold, so it stays awake afterwards.
+   */
+  const intro = useRef(useStore.getState().celebrateOnboarding).current;
+  const screenIn = useSharedValue(intro ? 0 : 1);
+  useEffect(() => {
+    if (!intro) return;
+    // after the engine's own mount effect, which starts it fully awake
+    const settle = setTimeout(() => {
+      engine.wake.value = ONBOARDING_HANDOFF_WAKE;
+      engine.charge.value = 0;
+      screenIn.value = withTiming(1, {duration: 480, easing: EASE_OUT});
+    }, 0);
+    const wake = setTimeout(() => {
+      engine.complete();
+      engine.charge.value = withTiming(1, {duration: 650, easing: EASE_OUT});
+      haptic('success');
+      kickCount();
+      clearCelebration();
+    }, 700);
+    return () => {
+      clearTimeout(settle);
+      clearTimeout(wake);
+    };
+    // runs once, for the mount that follows onboarding
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const screenInStyle = useAnimatedStyle(() => ({opacity: screenIn.value}), [screenIn]);
 
   const countStyle = useAnimatedStyle(() => ({
     transform: [
@@ -105,7 +144,8 @@ function HomeContent() {
   const flameSize = Math.round(m.type.dayCount.fontSize * 0.312);
 
   return (
-    <Screen>
+    <Animated.View style={[styles.fill, screenInStyle]}>
+      <Screen>
       {/* the screen's own reaction: cool when dormant, warm as it wakes */}
       <WarmWash />
 
@@ -178,11 +218,13 @@ function HomeContent() {
         {/* bottom gap 3% above the tab bar (fixed, not flexible) */}
         <View style={{height: m.band.gap}} />
       </View>
-    </Screen>
+      </Screen>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  fill: {flex: 1},
   wrap: {flex: 1},
   header: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'},
   centered: {alignItems: 'center', justifyContent: 'center'},

@@ -2,9 +2,10 @@ import type {NavigatorScreenParams} from '@react-navigation/native';
 
 export type OnboardingParamList = {
   Hook: undefined;
-  Habit: undefined;
+  Quitting: undefined;
+  Amounts: undefined;
   QuitDate: undefined;
-  Maths: undefined;
+  Savings: undefined;
   Paywall: undefined;
 };
 

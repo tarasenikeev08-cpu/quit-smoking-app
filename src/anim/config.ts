@@ -32,3 +32,9 @@ export const BREATH_PERIOD = 2600;
 
 /** Sparks that drift up while charging, and burst outward on completion. */
 export const EMBER_COUNT = 14;
+
+/**
+ * How awake the companion is at the end of onboarding. Home picks up from
+ * exactly this level for the hand-off celebration, so it reads as one wake.
+ */
+export const ONBOARDING_HANDOFF_WAKE = 0.8;

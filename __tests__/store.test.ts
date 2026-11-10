@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useStore, STORE_KEY, STORE_VERSION, migrateState} from '../src/store';
 import {currentStreakDays, lifetimeDays} from '../src/lib/streak';
 import {restoresLeft} from '../src/lib/restores';
-import {moneySaved} from '../src/lib/savings';
+import {moneySaved, monthlySpend} from '../src/lib/savings';
 
 const at = (y: number, mo: number, d: number, h = 12, mi = 0) => new Date(y, mo - 1, d, h, mi);
 const flush = () => new Promise<void>(r => setImmediate(() => r()));
@@ -54,6 +54,21 @@ describe('onboarding drives real state', () => {
     expect(S().streak.streakStart).toBe('2026-11-05');
     expect(streak()).toBe(5);
     expect(moneySaved(S().habit, lifetime())).toBe(75); // 1 pack/day x $15 x 5
+  });
+
+  test('finishing onboarding banks day one and cues the Home celebration once', async () => {
+    onboard();
+    expect(S().lastHeldAt).toBe('2026-11-10');
+    expect(S().celebrateOnboarding).toBe(true);
+    await flush();
+    // a runtime cue, never written to disk — a relaunch must not replay it
+    expect((await saved()).state).not.toHaveProperty('celebrateOnboarding');
+    S().clearCelebration();
+    expect(S().celebrateOnboarding).toBe(false);
+  });
+
+  test('the default habit is the ~$120/month moderate smoker', () => {
+    expect(Math.round(monthlySpend(S().habit))).toBe(122);
   });
 
   test('a quit date in the future is pulled back to today', () => {
